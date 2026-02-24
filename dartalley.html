@@ -1,0 +1,1521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DART ALLEY | Aerospace Neural Search</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cyan:    #00e5ff;
+            --orange:  #ff6b35;
+            --green:   #39ff14;
+            --purple:  #c084fc;
+            --void:    #020408;
+            --panel:   rgba(0,229,255,0.04);
+            --panel-b: rgba(0,229,255,0.08);
+            --border:  rgba(0,229,255,0.18);
+            --text:    #c8d8e8;
+            --dim:     #4a6070;
+        }
+        *{margin:0;padding:0;box-sizing:border-box;}
+        html{scroll-behavior:smooth;}
+        body{font-family:'Exo 2',sans-serif;background:var(--void);color:var(--text);min-height:100vh;overflow-x:hidden;}
+        body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,rgba(0,0,0,0) 0px,rgba(0,0,0,0) 2px,rgba(0,0,0,0.055) 2px,rgba(0,0,0,0.055) 4px);pointer-events:none;z-index:9999;}
+        #sc{position:fixed;inset:0;z-index:0;pointer-events:none;}
+
+        /* CORNER BRACKETS */
+        .cnr{position:fixed;width:55px;height:55px;opacity:0.18;pointer-events:none;z-index:2;}
+        .cnr.tl{top:16px;left:16px;border-top:2px solid var(--cyan);border-left:2px solid var(--cyan);}
+        .cnr.br{bottom:16px;right:16px;border-bottom:2px solid var(--orange);border-right:2px solid var(--orange);}
+
+        .app{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;padding:0 16px 80px;}
+
+        /* HUD */
+        .hud{width:100%;max-width:960px;display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--dim);letter-spacing:1px;}
+        .hud-l{display:flex;gap:18px;}
+        .ind{display:flex;align-items:center;gap:5px;}
+        .dot{width:6px;height:6px;border-radius:50%;}
+        .dot.g{background:var(--green);box-shadow:0 0 5px var(--green);animation:pd 2s ease-in-out infinite;}
+        .dot.o{background:var(--orange);box-shadow:0 0 5px var(--orange);animation:pd 2.5s ease-in-out infinite;}
+        @keyframes pd{0%,100%{opacity:1}50%{opacity:0.25}}
+        #htime{color:var(--cyan);}
+
+        /* LOGO */
+        .logo{margin-top:5vh;text-align:center;margin-bottom:36px;}
+        .logo-eye{font-family:'Share Tech Mono',monospace;font-size:0.7rem;letter-spacing:7px;color:var(--orange);text-transform:uppercase;margin-bottom:10px;}
+        .logo-main{font-family:'Orbitron',monospace;font-size:clamp(2.4rem,8vw,4.8rem);font-weight:900;letter-spacing:5px;color:#fff;text-transform:uppercase;text-shadow:0 0 40px rgba(0,229,255,0.7),0 0 80px rgba(0,229,255,0.2);animation:breathe 4s ease-in-out infinite;}
+        @keyframes breathe{0%,100%{text-shadow:0 0 40px rgba(0,229,255,0.6),0 0 80px rgba(0,229,255,0.2)}50%{text-shadow:0 0 60px rgba(0,229,255,1),0 0 120px rgba(0,229,255,0.4)}}
+        .logo-sub{font-family:'Orbitron',monospace;font-size:clamp(0.7rem,2vw,1.05rem);font-weight:400;letter-spacing:10px;color:var(--cyan);text-transform:uppercase;margin-top:8px;opacity:0.8;}
+        .logo-line{height:1px;width:260px;margin:16px auto 0;background:linear-gradient(90deg,transparent,var(--cyan),var(--orange),transparent);}
+
+        /* BADGES */
+        .badges{display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap;}
+        .badge{font-family:'Share Tech Mono',monospace;font-size:0.58rem;letter-spacing:1.5px;padding:4px 10px;border:1px solid var(--border);border-radius:2px;color:var(--dim);display:flex;align-items:center;gap:5px;transition:all 0.3s;}
+        .badge.cyan{color:var(--cyan);border-color:rgba(0,229,255,0.4);}
+        .badge.orng{color:var(--orange);border-color:rgba(255,107,53,0.4);}
+        .badge.purp{color:var(--purple);border-color:rgba(192,132,252,0.4);}
+        .bdot{width:5px;height:5px;border-radius:50%;background:currentColor;box-shadow:0 0 4px currentColor;}
+
+        /* SEARCH */
+        .sw{width:100%;max-width:700px;}
+        .sf{position:relative;border:1px solid var(--border);border-radius:4px;background:var(--panel);backdrop-filter:blur(8px);}
+        .sf::before{content:'QUERY INPUT';position:absolute;top:-9px;left:14px;font-family:'Share Tech Mono',monospace;font-size:0.56rem;letter-spacing:2px;color:var(--cyan);background:var(--void);padding:0 6px;}
+        .sf::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,var(--cyan),transparent 70%);opacity:0.45;}
+        .si{display:flex;align-items:center;padding:6px 8px;}
+        .pfx{font-family:'Share Tech Mono',monospace;color:var(--orange);font-size:1rem;padding:0 10px;flex-shrink:0;}
+        input[type="text"]{flex:1;padding:12px 8px;font-size:1rem;background:transparent;border:none;color:#fff;outline:none;font-family:'Share Tech Mono',monospace;letter-spacing:0.5px;caret-color:var(--cyan);}
+        input::placeholder{color:var(--dim);font-size:0.85rem;}
+        .bscan{font-family:'Orbitron',monospace;font-size:0.62rem;font-weight:700;letter-spacing:2px;padding:10px 18px;background:linear-gradient(135deg,var(--cyan),rgba(0,180,220,0.8));color:var(--void);border:none;border-radius:2px;cursor:pointer;transition:all 0.2s;text-transform:uppercase;white-space:nowrap;}
+        .bscan:hover{box-shadow:0 0 20px rgba(0,229,255,0.4);transform:translateY(-1px);}
+        .bscan:active{transform:translateY(0);}
+        .bscan:disabled{opacity:0.45;cursor:not-allowed;transform:none;}
+
+        /* FILTERS */
+        .frow{display:flex;gap:7px;margin-top:12px;flex-wrap:wrap;}
+        .ft{font-family:'Share Tech Mono',monospace;font-size:0.6rem;letter-spacing:1px;padding:5px 11px;border:1px solid var(--border);border-radius:2px;color:var(--dim);cursor:pointer;transition:all 0.2s;text-transform:uppercase;background:transparent;user-select:none;}
+        .ft.on-c{color:var(--cyan);border-color:rgba(0,229,255,0.5);background:rgba(0,229,255,0.05);}
+        .ft.on-o{color:var(--orange);border-color:rgba(255,107,53,0.5);background:rgba(255,107,53,0.05);}
+        .ft.on-p{color:var(--purple);border-color:rgba(192,132,252,0.5);background:rgba(192,132,252,0.05);}
+
+        /* STATUS */
+        .sbar{width:100%;max-width:700px;margin-top:10px;font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--dim);letter-spacing:1px;min-height:20px;display:flex;gap:14px;flex-wrap:wrap;}
+        .s2{display:flex;align-items:center;gap:4px;}
+        .s2.ok{color:var(--green);}
+        .s2.warn{color:var(--orange);}
+        .s2.err{color:#ef4444;}
+
+        /* LOADER */
+        .lw{display:none;flex-direction:column;align-items:center;gap:14px;margin-top:50px;}
+        .radar{width:56px;height:56px;border-radius:50%;border:2px solid var(--border);border-top-color:var(--cyan);border-right-color:var(--orange);animation:spin 0.9s linear infinite;}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .ltxt{font-family:'Share Tech Mono',monospace;font-size:0.72rem;color:var(--cyan);letter-spacing:3px;animation:blink 1.2s step-end infinite;}
+        @keyframes blink{0%,100%{opacity:1}50%{opacity:0.15}}
+
+        /* RESULTS LAYOUT */
+        .rw{width:100%;max-width:1160px;margin-top:36px;display:none;}
+        .ri{display:grid;grid-template-columns:1fr 360px;gap:22px;align-items:start;}
+        @media(max-width:820px){.ri{grid-template-columns:1fr;}}
+
+        /* PANEL HEADERS */
+        .ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+        .pl{font-family:'Orbitron',monospace;font-size:0.58rem;letter-spacing:3px;color:var(--cyan);text-transform:uppercase;}
+        .pm{font-family:'Share Tech Mono',monospace;font-size:0.66rem;color:var(--dim);}
+        .pm b{color:var(--orange);}
+
+        /* WEB RESULTS */
+        .rg{display:grid;grid-template-columns:1fr;gap:9px;}
+        .sdiv{font-family:'Share Tech Mono',monospace;font-size:0.6rem;letter-spacing:3px;color:var(--dim);text-transform:uppercase;margin:14px 0 7px;display:flex;align-items:center;gap:10px;}
+        .sdiv::after{content:'';flex:1;height:1px;background:var(--border);}
+
+        /* CARDS */
+        .card{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--cyan);border-radius:0 4px 4px 0;padding:14px 17px;transition:all 0.2s;position:relative;overflow:hidden;animation:cs 0.3s ease forwards;opacity:0;transform:translateX(-8px);}
+        @keyframes cs{to{opacity:1;transform:translateX(0)}}
+        .card.prio{border-left-color:var(--orange);background:rgba(255,107,53,0.03);}
+        .card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,var(--cyan),transparent 55%);opacity:0.22;}
+        .card.prio::before{background:linear-gradient(90deg,var(--orange),transparent 55%);}
+        .card:hover{transform:translateX(4px);background:var(--panel-b);box-shadow:0 4px 22px rgba(0,0,0,0.35);}
+        .ct{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:4px;}
+        .ctitle{font-family:'Exo 2',sans-serif;font-weight:600;font-size:0.95rem;color:var(--cyan);text-decoration:none;line-height:1.3;flex:1;transition:color 0.2s;}
+        .card.prio .ctitle{color:var(--orange);}
+        .ctitle:hover{color:#fff;}
+        .cbdg{font-family:'Share Tech Mono',monospace;font-size:0.48rem;letter-spacing:1.5px;padding:2px 6px;border-radius:2px;flex-shrink:0;text-transform:uppercase;margin-top:3px;}
+        .cb-l{color:var(--orange);border:1px solid rgba(255,107,53,0.4);background:rgba(255,107,53,0.08);}
+        .cb-w{color:#a0c4ff;border:1px solid rgba(160,196,255,0.3);background:rgba(160,196,255,0.05);}
+        .cb-s{color:var(--cyan);border:1px solid rgba(0,229,255,0.3);background:rgba(0,229,255,0.05);}
+        .curl{font-family:'Share Tech Mono',monospace;font-size:0.64rem;color:var(--dim);margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+        .ud{color:rgba(0,229,255,0.5);}
+        .card.prio .ud{color:rgba(255,107,53,0.6);}
+        .csnip{font-size:0.85rem;color:var(--text);line-height:1.6;opacity:0.8;}
+
+        /* ── IMAGE PANEL ── */
+        .img-panel{position:sticky;top:20px;}
+        .img-panel .pl{color:var(--purple);}
+        .img-panel .ph{border-color:rgba(192,132,252,0.2);}
+        .img-panel .pm b{color:var(--purple);}
+
+        .ig{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+
+        .ic{position:relative;aspect-ratio:4/3;overflow:hidden;border-radius:3px;border:1px solid rgba(192,132,252,0.18);background:rgba(192,132,252,0.04);cursor:pointer;transition:all 0.25s;animation:cs 0.35s ease forwards;opacity:0;}
+        .ic:hover{border-color:rgba(192,132,252,0.6);transform:scale(1.03);z-index:5;box-shadow:0 8px 28px rgba(0,0,0,0.65);}
+        .ic img{width:100%;height:100%;object-fit:cover;display:block;transition:opacity 0.35s;opacity:0;}
+        .ic img.ok{opacity:1;}
+        .ic .ov{position:absolute;bottom:0;left:0;right:0;padding:5px 7px;background:linear-gradient(transparent,rgba(0,0,0,0.88));font-family:'Share Tech Mono',monospace;font-size:0.5rem;color:#ccc;letter-spacing:0.5px;opacity:0;transition:opacity 0.2s;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+        .ic:hover .ov{opacity:1;}
+        .ic .ibdg{position:absolute;top:4px;right:4px;font-family:'Share Tech Mono',monospace;font-size:0.42rem;letter-spacing:1px;padding:2px 5px;background:rgba(0,0,0,0.72);border:1px solid rgba(192,132,252,0.4);border-radius:2px;color:var(--purple);text-transform:uppercase;}
+
+        /* shimmer */
+        .ic.shim::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(192,132,252,0.04) 25%,rgba(192,132,252,0.1) 50%,rgba(192,132,252,0.04) 75%);background-size:200% 100%;animation:sh 1.4s infinite;}
+        @keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+        /* source label under image grid */
+        .img-src-note{font-family:'Share Tech Mono',monospace;font-size:0.56rem;color:var(--dim);text-align:center;margin-top:8px;letter-spacing:1px;}
+        .img-src-note span{color:var(--purple);}
+
+
+        /* MEDIA TABS */
+        .media-panel{width:100%;display:none;}
+        .media-panel.active{display:block;}
+        .tab-bar{display:flex;gap:0;margin-bottom:10px;border-bottom:1px solid var(--border);}
+        .tab-btn{font-family:'Share Tech Mono',monospace;font-size:0.6rem;letter-spacing:2px;padding:7px 14px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--dim);cursor:pointer;transition:all 0.2s;text-transform:uppercase;position:relative;bottom:-1px;}
+        .tab-btn.active{color:var(--cyan);border-bottom-color:var(--cyan);}
+        .tab-btn.active.yt{color:var(--orange);border-bottom-color:var(--orange);}
+        .tab-btn .tab-count{font-size:0.52rem;margin-left:5px;opacity:0.7;}
+        .tab-btn:hover:not(.active){color:var(--text);}
+        /* LOAD MORE */
+        .more-btn{font-family:'Share Tech Mono',monospace;font-size:0.58rem;letter-spacing:2px;color:var(--dim);text-align:center;margin-top:9px;padding:8px;border:1px solid var(--border);border-radius:2px;cursor:pointer;transition:all 0.2s;text-transform:uppercase;display:none;}
+        .more-btn:hover{color:var(--purple);border-color:rgba(192,132,252,0.4);background:rgba(192,132,252,0.04);}
+
+        /* LIGHTBOX */
+        .lb{display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.93);backdrop-filter:blur(14px);align-items:center;justify-content:center;flex-direction:column;gap:14px;padding:20px;}
+        .lb.open{display:flex;}
+        .lb-img{max-width:90vw;max-height:76vh;object-fit:contain;border:1px solid rgba(192,132,252,0.3);border-radius:4px;box-shadow:0 0 60px rgba(0,0,0,0.8);}
+        .lb-meta{font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:#ccc;letter-spacing:1px;text-align:center;max-width:70vw;}
+        .lb-meta a{color:var(--purple);text-decoration:none;}
+        .lb-meta a:hover{color:#fff;}
+        .lb-x{position:fixed;top:18px;right:22px;font-size:1.3rem;color:var(--dim);cursor:pointer;transition:color 0.2s;z-index:10001;font-family:monospace;}
+        .lb-x:hover{color:#fff;}
+        .lb-nav{display:flex;gap:18px;margin-top:4px;}
+        .lb-nav button{font-family:'Share Tech Mono',monospace;font-size:0.63rem;letter-spacing:2px;padding:6px 16px;border:1px solid var(--border);border-radius:2px;background:transparent;color:var(--dim);cursor:pointer;transition:all 0.2s;text-transform:uppercase;}
+        .lb-nav button:hover{color:var(--cyan);border-color:var(--cyan);}
+
+        /* NO RESULTS */
+        .nr{text-align:center;padding:55px 20px;}
+        .nr-code{font-family:'Orbitron',monospace;font-size:2.8rem;color:var(--border);margin-bottom:10px;}
+        .nr-msg{font-family:'Share Tech Mono',monospace;color:var(--dim);font-size:0.78rem;letter-spacing:2px;}
+
+        .footer{margin-top:60px;text-align:center;font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--dim);letter-spacing:2px;border-top:1px solid var(--border);width:90%;max-width:960px;padding-top:18px;}
+        .footer span{color:var(--orange);}
+        .iframe-warn{display:none;width:100%;max-width:700px;margin-top:14px;padding:14px 18px;border:1px solid rgba(255,107,53,0.5);border-left:3px solid var(--orange);border-radius:0 4px 4px 0;background:rgba(255,107,53,0.06);font-family:'Share Tech Mono',monospace;font-size:0.68rem;color:var(--orange);letter-spacing:1px;line-height:1.8;}
+        .iframe-warn .iw-title{font-family:'Orbitron',monospace;font-size:0.62rem;letter-spacing:2px;margin-bottom:8px;}
+        .iframe-warn .iw-dim{color:var(--dim);margin-top:6px;font-size:0.61rem;}
+
+        /* ── NEURAL INTELLIGENCE PANEL ── */
+        .intel-panel{width:100%;max-width:700px;margin-top:10px;display:none;border:1px solid rgba(57,255,20,0.2);border-left:3px solid var(--green);border-radius:0 4px 4px 0;background:rgba(57,255,20,0.02);padding:10px 14px;animation:cs 0.3s ease forwards;}
+        .intel-panel.show{display:block;}
+        .intel-hdr{font-family:'Orbitron',monospace;font-size:0.52rem;letter-spacing:3px;color:var(--green);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;}
+        .intel-hdr span{color:var(--dim);font-size:0.48rem;cursor:pointer;letter-spacing:1px;}
+        .intel-hdr span:hover{color:var(--green);}
+        .intel-row{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start;}
+        .intel-col{flex:1;min-width:120px;}
+        .intel-label{font-family:'Share Tech Mono',monospace;font-size:0.52rem;color:var(--dim);letter-spacing:2px;margin-bottom:5px;text-transform:uppercase;}
+        .intel-tags{display:flex;flex-wrap:wrap;gap:4px;}
+        .intel-tag{font-family:'Share Tech Mono',monospace;font-size:0.56rem;padding:2px 8px;border:1px solid rgba(57,255,20,0.3);border-radius:2px;color:rgba(57,255,20,0.8);background:rgba(57,255,20,0.04);cursor:pointer;transition:all 0.2s;}
+        .intel-tag:hover{background:rgba(57,255,20,0.12);border-color:var(--green);color:var(--green);}
+        .intel-tag.domain{border-color:rgba(0,229,255,0.3);color:rgba(0,229,255,0.7);background:rgba(0,229,255,0.03);}
+        .intel-tag.domain:hover{border-color:var(--cyan);color:var(--cyan);}
+        .intel-stats{font-family:'Share Tech Mono',monospace;font-size:0.52rem;color:var(--dim);margin-top:6px;}
+        .intel-stats b{color:var(--green);}
+
+        .ft.on-g{color:var(--green);border-color:rgba(57,255,20,0.5);background:rgba(57,255,20,0.05);}
+        .ft.on-r{color:#ff4444;border-color:rgba(255,68,68,0.5);background:rgba(255,68,68,0.05);}
+
+        /* DOMAIN NETWORK CARDS */
+        .card.dom{border-left-color:var(--green);background:rgba(57,255,20,0.02);}
+        .card.dom::before{background:linear-gradient(90deg,var(--green),transparent 55%);}
+        .card.dom .ctitle{color:var(--green);}
+        .card.dom .ud{color:rgba(57,255,20,0.6);}
+        .cb-g{color:var(--green);border:1px solid rgba(57,255,20,0.35);background:rgba(57,255,20,0.06);}
+        .dom-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;}
+        .dom-tag{font-family:'Share Tech Mono',monospace;font-size:0.56rem;letter-spacing:1px;padding:2px 8px;border:1px solid rgba(57,255,20,0.25);border-radius:2px;color:rgba(57,255,20,0.7);background:rgba(57,255,20,0.04);text-decoration:none;transition:all 0.2s;}
+        .dom-tag:hover{border-color:var(--green);color:var(--green);background:rgba(57,255,20,0.1);}
+        .dom-tag.live{border-color:rgba(57,255,20,0.5);color:var(--green);}
+        .dom-tag.dead{opacity:0.35;text-decoration:line-through;}
+
+        /* ── VIDEO PANEL ── */
+        .vid-panel{margin-top:22px;}
+        .vid-panel .pl{color:#ff4444;}
+        .vid-panel .ph{border-color:rgba(255,68,68,0.2);}
+        .vid-panel .pm b{color:#ff4444;}
+
+        .vg{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+        @media(max-width:520px){.vg{grid-template-columns:1fr;}}
+
+        .vc{position:relative;border-radius:4px;border:1px solid rgba(255,68,68,0.18);background:rgba(255,68,68,0.03);cursor:pointer;transition:all 0.25s;animation:cs 0.35s ease forwards;opacity:0;overflow:hidden;text-decoration:none;display:block;}
+        .vc:hover{border-color:rgba(255,68,68,0.55);transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,0.65);}
+        .vc-thumb{position:relative;aspect-ratio:16/9;overflow:hidden;background:#111;}
+        .vc-thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:opacity 0.35s;opacity:0;}
+        .vc-thumb img.ok{opacity:1;}
+        .vc-play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.2s;}
+        .vc:hover .vc-play{opacity:1;}
+        .vc-play-btn{width:40px;height:40px;background:rgba(255,0,0,0.88);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(0,0,0,0.6);}
+        .vc-play-btn::after{content:'';border-left:14px solid #fff;border-top:8px solid transparent;border-bottom:8px solid transparent;margin-left:3px;}
+        .vc-info{padding:8px 10px 10px;}
+        .vc-title{font-family:'Exo 2',sans-serif;font-size:0.78rem;font-weight:600;color:#e8e8e8;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+        .vc-meta{font-family:'Share Tech Mono',monospace;font-size:0.52rem;color:var(--dim);margin-top:5px;display:flex;justify-content:space-between;align-items:center;}
+        .vc-ch{color:rgba(255,68,68,0.7);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70%;}
+        .vc-dur{color:var(--dim);flex-shrink:0;}
+        .vbdg{position:absolute;top:5px;right:5px;font-family:'Share Tech Mono',monospace;font-size:0.42rem;letter-spacing:1px;padding:2px 5px;background:rgba(0,0,0,0.8);border:1px solid rgba(255,68,68,0.5);border-radius:2px;color:#ff4444;text-transform:uppercase;}
+
+        .cb-r{color:#ff4444;border:1px solid rgba(255,68,68,0.4);background:rgba(255,68,68,0.06);}
+
+        @media(max-width:520px){.hud-r,.pfx{display:none}.logo-main{font-size:2.4rem}}
+    </style>
+</head>
+<body>
+<canvas id="sc"></canvas>
+<div class="cnr tl"></div><div class="cnr br"></div>
+
+<!-- LIGHTBOX -->
+<div class="lb" id="lb">
+    <div class="lb-x" id="lb-x">✕</div>
+    <img class="lb-img" id="lb-img" src="" alt="">
+    <div class="lb-meta" id="lb-meta"></div>
+    <div class="lb-nav">
+        <button onclick="lbNav(-1)">◀ PREV</button>
+        <button onclick="lbNav(1)">NEXT ▶</button>
+    </div>
+</div>
+
+<div class="app">
+    <div class="hud">
+        <div class="hud-l">
+            <div class="ind"><div class="dot g"></div>SYS ONLINE</div>
+            <div class="ind"><div class="dot o"></div>MULTI-SOURCE LIVE</div>
+        </div>
+        <div class="hud-r"><span id="htime">--:--:-- UTC</span></div>
+    </div>
+
+    <div class="logo">
+        <div class="logo-eye">DART MEADOW AEROSPACE</div>
+        <div class="logo-main">DART ALLEY</div>
+        <div class="logo-sub">Neural Search Engine</div>
+        <div class="logo-line"></div>
+        <div class="badges">
+            <div class="badge orng"><span class="bdot"></span>DART PRIORITY</div>
+            <div class="badge" id="b-local"><span class="bdot"></span>LOCAL INDEX</div>
+            <div class="badge" id="b-wiki"><span class="bdot"></span>WIKIPEDIA</div>
+            <div class="badge" id="b-srx"><span class="bdot"></span>WEB SEARCH</div>
+            <div class="badge" id="b-img"><span class="bdot"></span>IMAGE SCAN</div>
+            <div class="badge" id="b-dom"><span class="bdot"></span>DOMAIN NET</div>
+            <div class="badge" id="b-yt"><span class="bdot"></span>YOUTUBE</div>
+        </div>
+    </div>
+
+    <div class="sw">
+        <div class="sf">
+            <div class="si">
+                <span class="pfx">&gt;_</span>
+                <input type="text" id="qi" placeholder="search anything across the Meadow..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                <button class="bscan" id="sbtn" onclick="doSearch()">SCAN</button>
+            </div>
+        </div>
+        <div class="frow">
+            <button class="ft on-o" id="f-prio"  onclick="tF('prio', this)">◈ DART DOMAINS</button>
+            <button class="ft on-c" id="f-local" onclick="tF('local',this)">◉ LOCAL DB</button>
+            <button class="ft on-c" id="f-wiki"  onclick="tF('wiki', this)">◉ WIKIPEDIA</button>
+            <button class="ft on-c" id="f-srx"   onclick="tF('srx',  this)">◉ WEB SEARCH</button>
+            <button class="ft on-p" id="f-img"   onclick="tF('img',  this)">◈ IMAGE SCAN</button>
+            <button class="ft on-g" id="f-dom"   onclick="tF('dom',  this)">◈ DOMAIN NET</button>
+            <button class="ft on-r" id="f-yt"    onclick="tF('yt',   this)">▶ YOUTUBE</button>
+        </div>
+        <div class="sbar" id="sbar"></div>
+        <div class="intel-panel" id="intelPanel">
+            <div class="intel-hdr">◈ NEURAL SIGNAL PROFILE <span id="intelForget" onclick="forgetTopic()">✕ FORGET TOPIC</span></div>
+            <div class="intel-row">
+                <div class="intel-col">
+                    <div class="intel-label">▸ LEARNED KEYWORDS</div>
+                    <div class="intel-tags" id="intelKeywords"></div>
+                </div>
+                <div class="intel-col">
+                    <div class="intel-label">▸ TRUSTED DOMAINS</div>
+                    <div class="intel-tags" id="intelDomains"></div>
+                </div>
+                <div class="intel-col">
+                    <div class="intel-label">▸ PREFERRED SOURCES</div>
+                    <div class="intel-tags" id="intelSources"></div>
+                </div>
+            </div>
+            <div class="intel-stats" id="intelStats"></div>
+        </div>
+
+    <!-- IFRAME / RESTRICTED CONTEXT WARNING -->
+    <div class="iframe-warn" id="iframeWarn">
+        <div class="iw-title">⚠ RESTRICTED NETWORK CONTEXT DETECTED</div>
+        External API calls are blocked in this environment (Claude preview / sandboxed iframe).<br>
+        Download the file and open it from your local server to enable live search.<br>
+        <div class="iw-dim">→ Open: <strong>localhost:7700/dartalley.html</strong> in your browser directly</div>
+    </div>
+
+    <div class="lw" id="lw">
+        <div class="radar"></div>
+        <div class="ltxt" id="ltxt">SCANNING...</div>
+    </div>
+
+    <div class="rw" id="rw">
+        <div class="ri">
+            <!-- WEB PANEL -->
+            <div>
+                <div class="ph">
+                    <div class="pl">// SIGNAL CAPTURE //</div>
+                    <div class="pm"><b id="rc">0</b> PATHWAYS</div>
+                </div>
+                <div class="rg" id="rg"></div>
+            </div>
+            <!-- TABBED MEDIA PANEL -->
+            <div id="mediaOuter" style="display:none;">
+                <div class="tab-bar">
+                    <button class="tab-btn yt active" id="tab-yt" onclick="switchTab('yt')">▶ VIDEO<span class="tab-count" id="vc-count">0</span></button>
+                    <button class="tab-btn" id="tab-img" onclick="switchTab('img')">◈ IMAGES<span class="tab-count" id="ic">0</span></button>
+                </div>
+                <!-- VIDEO PANEL -->
+                <div class="media-panel active" id="vidP">
+                    <div class="vg" id="vg"></div>
+                    <div class="img-src-note" style="margin-top:8px;">SOURCE: <span>YOUTUBE</span></div>
+                </div>
+                <!-- IMAGE PANEL -->
+                <div class="media-panel" id="imgP">
+                    <div class="ig" id="ig"></div>
+                    <div class="img-src-note" style="margin-top:8px;">SOURCE: <span>WIKIPEDIA · WIKIMEDIA</span></div>
+                    <div class="more-btn" id="moreBtn" onclick="loadMore()">▼ LOAD MORE</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">DART ALLEY &nbsp;|&nbsp; <span>DART MEADOW AEROSPACE</span> &nbsp;|&nbsp; DDG · HN · REDDIT · GDELT · GITHUB · YOUTUBE · WIKIPEDIA · WIKIMEDIA · WIKIDATA · LOCAL</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  16
+//  Web:    DDG · HN · Reddit · GDELT · Wiki ExtLinks · GitHub (parallel, CORS-open)
+//  Images: Wikipedia + Wikimedia Commons
+//  Video:  Invidious (10 instances, parallel waves) + allorigins YT RSS fallback
+//  Domains: Wikidata P856 + favicon probing
+//  NLE:    Neural Learning Engine — behavioral relevance (localStorage)
+//  Errors: All network failures silent via AbortController
+// ═══════════════════════════════════════════════════════════
+
+// ── STARFIELD ─────────────────────────────────────────
+(function(){
+    const cv=document.getElementById('sc'),cx=cv.getContext('2d');let st=[];
+    const rsz=()=>{cv.width=innerWidth;cv.height=innerHeight;};
+    const init=()=>{st=[];for(let i=0;i<200;i++)st.push({x:Math.random()*cv.width,y:Math.random()*cv.height,r:Math.random()*1.4+0.2,a:Math.random(),spd:Math.random()*0.25+0.04,dr:(Math.random()-0.5)*0.07});};
+    const draw=()=>{cx.clearRect(0,0,cv.width,cv.height);st.forEach(s=>{cx.beginPath();cx.arc(s.x,s.y,s.r,0,Math.PI*2);cx.fillStyle=`rgba(200,225,255,${s.a})`;cx.fill();s.a+=(Math.random()-0.5)*0.016;s.a=Math.max(0.04,Math.min(1,s.a));s.x+=s.dr;s.y-=s.spd;if(s.y<-2){s.y=cv.height+2;s.x=Math.random()*cv.width;}});requestAnimationFrame(draw);};
+    window.addEventListener('resize',()=>{rsz();init();});rsz();init();draw();
+})();
+
+// ── CLOCK ─────────────────────────────────────────────
+setInterval(()=>{document.getElementById('htime').textContent=new Date().toUTCString().split(' ')[4]+' UTC';},1000);
+
+// ── IFRAME / SANDBOX DETECTION ────────────────────────
+(function(){
+    const isIframe = window.self !== window.top;
+    const isRestricted = isIframe || window.location.protocol === 'blob:' || window.location.href.includes('claude.ai');
+    if(isRestricted){
+        document.getElementById('iframeWarn').style.display = 'block';
+        console.warn('[DART] Running in restricted context — external fetches will be blocked. Use localhost directly.');
+    }
+})();
+const F={prio:true,local:true,wiki:true,srx:true,img:true,dom:true,yt:true};
+const DART=['dartmeadow.com','radicaldeepscale.com','drymeadow.com'];
+let DB=[], allImgs=[], imgPage=0;
+const IPP=12;
+const stats={};
+
+function tF(k,btn){
+    F[k]=!F[k];
+    const cls=k==='prio'?'on-o':k==='img'?'on-p':k==='dom'?'on-g':k==='yt'?'on-r':'on-c';
+    btn.classList.toggle(cls,F[k]);
+}
+function setBadge(id,cls='cyan'){const b=document.getElementById(id);if(b){b.classList.add(cls);}}
+function setStat(k,cls,msg){stats[k]={cls,msg};document.getElementById('sbar').innerHTML=Object.values(stats).map(s=>`<div class="s2 ${s.cls}">${s.msg}</div>`).join('');}
+
+// ── LOAD LOCAL DB ─────────────────────────────────────
+fetch('database.json')
+    .then(r=>{if(!r.ok)throw new Error(r.status);return r.json();})
+    .then(d=>{DB=Array.isArray(d)?d:[];setBadge('b-local');setStat('local','ok','LOCAL: '+DB.length);})
+    .catch(()=>setStat('local','warn','LOCAL: unavailable'));
+
+// ── DOM ───────────────────────────────────────────────
+const qi=document.getElementById('qi'),lw=document.getElementById('lw'),
+      ltxt=document.getElementById('ltxt'),rw=document.getElementById('rw'),
+      rg=document.getElementById('rg'),rc=document.getElementById('rc'),
+      ig=document.getElementById('ig'),ic=document.getElementById('ic'),
+      sbtn=document.getElementById('sbtn'),
+      imgP=document.getElementById('imgP'),
+      mediaOuter=document.getElementById('mediaOuter'),
+      moreBtn=document.getElementById('moreBtn');
+
+qi.addEventListener('keypress',e=>{if(e.key==='Enter')doSearch();});
+
+// ── MAIN SEARCH ───────────────────────────────────────
+async function doSearch(){
+    const q=qi.value.trim();if(!q)return;
+    NLE.onSearch(q);  // ← record search intent
+    sbtn.disabled=true;
+    rg.innerHTML='';ig.innerHTML='';allImgs=[];imgPage=0;
+    document.getElementById('vg').innerHTML='';
+    document.getElementById('mediaOuter').style.display='none';
+    document.getElementById('tab-yt').classList.add('active');
+    document.getElementById('tab-img').classList.remove('active');
+    document.getElementById('vidP').classList.add('active');
+    document.getElementById('imgP').classList.remove('active');
+    rw.style.display='none';moreBtn.style.display='none';
+    lw.style.display='flex';ltxt.textContent='INITIALIZING SCAN...';
+
+    // Show intelligence panel if we have prior learning on this topic
+    renderIntelPanel(q);
+
+    const all=[];
+
+    // 1. DART priority local
+    if(F.prio&&DB.length){
+        const ql=q.toLowerCase();
+        DB.filter(i=>DART.some(d=>(i.url||'').toLowerCase().includes(d))&&hit(i,ql))
+          .forEach(h=>all.push({...h,_s:'prio'}));
+    }
+    // 2. Local non-DART
+    if(F.local&&DB.length){
+        const ql=q.toLowerCase();
+        DB.filter(i=>!DART.some(d=>(i.url||'').toLowerCase().includes(d))&&hit(i,ql))
+          .forEach(h=>all.push({...h,_s:'local'}));
+    }
+    // 3. Wikipedia text search
+    if(F.wiki){
+        ltxt.textContent='QUERYING WIKIPEDIA...';
+        try{
+            const wr=await wikiSearch(q);
+            wr.forEach(r=>all.push({...r,_s:'wiki'}));
+            setBadge('b-wiki');setStat('wiki','ok','WIKI: '+wr.length);
+        }catch(e){setStat('wiki','warn','WIKI: timeout');}
+    }
+    // 4. Searx web search (JSON API, no proxy needed)
+    if(F.srx){
+        ltxt.textContent='SCANNING WEB — DDG · HN · REDDIT · GDELT...';
+        try{
+            const sr=await searxSearch(q);
+            sr.forEach(r=>all.push({...r,_s:'srx'}));
+            setBadge('b-srx');setStat('srx','ok','WEB: '+sr.length);
+        }catch(e){
+            setStat('srx','warn','WEB: '+e.message.slice(0,32));
+            console.warn('[DART] searx:',e.message);
+        }
+    }
+
+    // Deduplicate
+    const seen=new Set();
+    let final=all.filter(r=>{const k=(r.url||r.title||'').toLowerCase();if(seen.has(k))return false;seen.add(k);return true;});
+
+    // ── NLE: Re-rank results using learned model ──
+    final = NLE.rankResults(q, final);
+    // Track skip penalties from this impression
+    NLE.applySkipPenalties(q, final);
+    // Record impressions so skips can be detected on future searches
+    NLE.onImpression(q, final);
+
+    // 5. Images (parallel, non-blocking)
+    if(F.img){ltxt.textContent='SCANNING IMAGES...';searchImages(q).catch(()=>{});}
+
+    // 6. Domain network discovery (parallel, non-blocking)
+    if(F.dom){searchDomains(q,final).catch(()=>{});}
+
+    // 7. YouTube video results (parallel, non-blocking)
+    if(F.yt){searchYouTube(q).catch(()=>{});}
+
+    lw.style.display='none';sbtn.disabled=false;
+    renderWeb(final,q);
+    rw.style.display='block';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  NEURAL LEARNING ENGINE — Behavioral Relevance Intelligence
+//  Tracks clicks, dwell time, repeated searches, skip patterns.
+//  Builds a personal signal model per topic that persists in
+//  localStorage and reshapes every future search in real-time.
+// ═══════════════════════════════════════════════════════════
+
+const NLE = (() => {
+    const STORE_KEY = 'dart_nle_v1';
+    const MAX_TOPICS = 120;
+    const DECAY = 0.92;       // score decay per day of inactivity
+    const CLICK_W = 3.0;      // weight: clicked a result
+    const DWELL_W = 0.8;      // weight per 10s of dwell time
+    const SKIP_W  = -0.6;     // weight: result shown but never clicked (after 3+ ignores)
+    const REPEAT_W = 1.5;     // weight: searched same topic again
+    const SEED_W  = 2.0;      // weight: manually promoted keyword
+
+    let model = {};  // { topicKey: { keywords:{}, domains:{}, sources:{}, skipped:Set, clicks:n, lastSeen:ts } }
+
+    function load(){
+        try{ model=JSON.parse(localStorage.getItem(STORE_KEY)||'{}'); }
+        catch(e){ model={}; }
+        // Convert skipped arrays back to Sets
+        Object.values(model).forEach(t=>{ t.skipped=new Set(t.skipped||[]); });
+    }
+
+    function save(){
+        const serializable={};
+        Object.entries(model).forEach(([k,t])=>{
+            serializable[k]={...t, skipped:[...t.skipped]};
+        });
+        try{ localStorage.setItem(STORE_KEY, JSON.stringify(serializable)); }
+        catch(e){ pruneOldTopics(); }
+    }
+
+    function topicKey(q){ return q.toLowerCase().trim().replace(/\s+/g,' '); }
+
+    function getOrCreate(q){
+        const k=topicKey(q);
+        if(!model[k]) model[k]={keywords:{},domains:{},sources:{},skipped:new Set(),clicks:0,impressions:0,lastSeen:Date.now(),searches:0};
+        return model[k];
+    }
+
+    function applyDecay(topic){
+        const daysSince=(Date.now()-topic.lastSeen)/(1000*60*60*24);
+        const factor=Math.pow(DECAY, daysSince);
+        Object.keys(topic.keywords).forEach(k=>{ topic.keywords[k]*=factor; if(topic.keywords[k]<0.05) delete topic.keywords[k]; });
+        Object.keys(topic.domains).forEach(k=>{ topic.domains[k]*=factor; if(topic.domains[k]<0.05) delete topic.domains[k]; });
+        Object.keys(topic.sources).forEach(k=>{ topic.sources[k]*=factor; });
+    }
+
+    function extractSignals(item){
+        const tokens=[];
+        const text=((item.title||'')+' '+(item.desc||'')).toLowerCase();
+        // Extract meaningful words (3+ chars, not stopwords)
+        const stops=new Set(['the','and','for','are','was','with','this','that','from','have','not','but','all','can','its','will','been','has','had','their','they','about','more','also','into','than','when','your','our','out','use','one','two','how','who','what','which','would','could','should','these','those','there','where','after','before','other','over','such','some','been','very','just','like','well','used','made','most','much','only','both','even','same','take','each','many','come','than','then','yet','now','may','per','via','new']);
+        text.match(/\b[a-z][a-z0-9]{2,}\b/g)?.forEach(w=>{ if(!stops.has(w)) tokens.push(w); });
+        const domain = getDom(item.url||'');
+        return { tokens, domain, source: item._s||'srx' };
+    }
+
+    // ── PUBLIC API ──────────────────────────────────────
+
+    // Call when a search is initiated
+    function onSearch(q){
+        const t=getOrCreate(q);
+        applyDecay(t);
+        t.searches=(t.searches||0)+1;
+        t.lastSeen=Date.now();
+        if(t.searches>1) Object.keys(t.keywords).forEach(k=>t.keywords[k]=(t.keywords[k]||0)+REPEAT_W*0.1);
+        save();
+    }
+
+    // Call when results are rendered (track impressions for skip detection)
+    function onImpression(q, items){
+        const t=getOrCreate(q);
+        t.impressions=(t.impressions||0)+items.length;
+        // After 3 searches on same topic, start tracking what was shown but not clicked
+        if(t.searches>=3){
+            items.forEach(item=>{
+                const k=(item.url||item.title||'').toLowerCase();
+                if(k) t.skipped.add(k);
+            });
+        }
+        save();
+    }
+
+    // Call when user clicks a result
+    function onClick(q, item){
+        const t=getOrCreate(q);
+        const {tokens,domain,source}=extractSignals(item);
+        // Boost clicked keywords
+        tokens.forEach(w=>{ t.keywords[w]=(t.keywords[w]||0)+CLICK_W; });
+        // Boost clicked domain
+        if(domain) t.domains[domain]=(t.domains[domain]||0)+CLICK_W;
+        // Boost source type
+        t.sources[source]=(t.sources[source]||0)+CLICK_W;
+        t.clicks=(t.clicks||0)+1;
+        // Remove from skipped since they did click it
+        const k=(item.url||item.title||'').toLowerCase();
+        t.skipped.delete(k);
+        save();
+    }
+
+    // Call when user dwells on a result (tab returned to, mouse hovered 5s+)
+    function onDwell(q, item, seconds){
+        if(seconds<5) return;
+        const t=getOrCreate(q);
+        const {tokens,domain,source}=extractSignals(item);
+        const weight=DWELL_W*(seconds/10);
+        tokens.forEach(w=>{ t.keywords[w]=(t.keywords[w]||0)+weight; });
+        if(domain) t.domains[domain]=(t.domains[domain]||0)+weight*0.5;
+        t.sources[source]=(t.sources[source]||0)+weight*0.3;
+        save();
+    }
+
+    // Apply skip penalties to consistently ignored results
+    function applySkipPenalties(q, shownItems){
+        const t=model[topicKey(q)];
+        if(!t||t.searches<3) return;
+        shownItems.forEach(item=>{
+            const k=(item.url||item.title||'').toLowerCase();
+            if(t.skipped.has(k)){
+                // Item shown again without being clicked — penalize its signals
+                const {tokens,domain}=extractSignals(item);
+                tokens.forEach(w=>{ if(t.keywords[w]) t.keywords[w]+=SKIP_W*0.2; });
+                if(domain&&t.domains[domain]) t.domains[domain]+=SKIP_W*0.3;
+            }
+        });
+        save();
+    }
+
+    // Score a result item 0–100+ for a given query
+    function scoreItem(q, item){
+        const t=model[topicKey(q)];
+        if(!t) return 50; // neutral for unknown topics
+        const {tokens,domain,source}=extractSignals(item);
+        let score=50;
+        // Keyword relevance
+        tokens.forEach(w=>{ score+=(t.keywords[w]||0)*1.2; });
+        // Domain trust
+        if(domain) score+=(t.domains[domain]||0)*2.5;
+        // Source preference
+        score+=(t.sources[source]||0)*1.0;
+        // Penalize skipped URLs
+        const k=(item.url||item.title||'').toLowerCase();
+        if(t.skipped.has(k)) score-=15;
+        return Math.max(0,score);
+    }
+
+    // Sort and filter results using learned model
+    function rankResults(q, items){
+        const t=model[topicKey(q)];
+        if(!t||t.clicks<2) return items; // not enough data yet, return as-is
+        return [...items].sort((a,b)=>scoreItem(q,b)-scoreItem(q,a));
+    }
+
+    // Get top learned keywords to seed related searches
+    function getSeedKeywords(q, limit=6){
+        const t=model[topicKey(q)];
+        if(!t) return [];
+        return Object.entries(t.keywords)
+            .filter(([w,s])=>s>1.5&&w.length>3)
+            .sort(([,a],[,b])=>b-a)
+            .slice(0,limit)
+            .map(([w])=>w);
+    }
+
+    // Get top trusted domains for a topic
+    function getTrustedDomains(q, limit=5){
+        const t=model[topicKey(q)];
+        if(!t) return [];
+        return Object.entries(t.domains)
+            .filter(([,s])=>s>2)
+            .sort(([,a],[,b])=>b-a)
+            .slice(0,limit)
+            .map(([d])=>d);
+    }
+
+    // Get topic intelligence summary
+    function getInsight(q){
+        const t=model[topicKey(q)];
+        if(!t||t.clicks<1) return null;
+        return {
+            searches: t.searches||0,
+            clicks: t.clicks||0,
+            topKeywords: getSeedKeywords(q,8),
+            topDomains: getTrustedDomains(q,4),
+            topSources: Object.entries(t.sources).sort(([,a],[,b])=>b-a).slice(0,3).map(([s])=>s)
+        };
+    }
+
+    // Clear model for a specific topic or all
+    function forget(q){
+        if(q){ delete model[topicKey(q)]; }
+        else { model={}; }
+        save();
+    }
+
+    function pruneOldTopics(){
+        const sorted=Object.entries(model).sort(([,a],[,b])=>a.lastSeen-b.lastSeen);
+        while(sorted.length>MAX_TOPICS){ const [k]=sorted.shift(); delete model[k]; }
+    }
+
+    function getStats(){
+        const topics=Object.keys(model).length;
+        const totalClicks=Object.values(model).reduce((s,t)=>s+(t.clicks||0),0);
+        return{topics,totalClicks};
+    }
+
+    load();
+    return{onSearch,onImpression,onClick,onDwell,applySkipPenalties,rankResults,scoreItem,getSeedKeywords,getTrustedDomains,getInsight,forget,getStats};
+})();
+
+// ── NEURAL INTELLIGENCE PANEL UI ─────────────────────
+function renderIntelPanel(q){
+    const insight=NLE.getInsight(q);
+    const panel=document.getElementById('intelPanel');
+    if(!insight||insight.searches<2){panel.classList.remove('show');return;}
+    panel.classList.add('show');
+    _populateIntelPanel(q,insight);
+}
+function updateIntelPanel(q){
+    const insight=NLE.getInsight(q);
+    if(!insight)return;
+    document.getElementById('intelPanel').classList.add('show');
+    _populateIntelPanel(q,insight);
+}
+function _populateIntelPanel(q,insight){
+    const kEl=document.getElementById('intelKeywords');
+    const dEl=document.getElementById('intelDomains');
+    const sEl=document.getElementById('intelSources');
+    const stEl=document.getElementById('intelStats');
+    const srcLabels={prio:'DART',local:'LOCAL',wiki:'WIKI',srx:'WEB',dom:'DOMAIN',yt:'YOUTUBE'};
+    kEl.innerHTML=insight.topKeywords.map(w=>`<span class="intel-tag" onclick="seedSearch('${esc(w)}')" title="Refine with keyword">${esc(w)}</span>`).join('')||'<span style="color:var(--dim);font-family:\'Share Tech Mono\',monospace;font-size:0.55rem">building...</span>';
+    dEl.innerHTML=insight.topDomains.map(d=>`<span class="intel-tag domain" onclick="filterByDomain('${esc(d)}')" title="Filter by domain">${esc(d)}</span>`).join('')||'<span style="color:var(--dim);font-family:\'Share Tech Mono\',monospace;font-size:0.55rem">building...</span>';
+    sEl.innerHTML=insight.topSources.map(s=>`<span class="intel-tag domain">${esc(srcLabels[s]||s.toUpperCase())}</span>`).join('')||'';
+    stEl.innerHTML=`Searched <b>${insight.searches}×</b> &nbsp;·&nbsp; <b>${insight.clicks}</b> clicks &nbsp;·&nbsp; model active`;
+}
+function forgetTopic(){
+    if(!_lastQuery)return;
+    NLE.forget(_lastQuery);
+    document.getElementById('intelPanel').classList.remove('show');
+}
+function seedSearch(keyword){
+    qi.value=_lastQuery+' '+keyword;
+    doSearch();
+}
+function filterByDomain(domain){
+    qi.value=_lastQuery+' site:'+domain;
+    doSearch();
+}
+
+async function wikiSearch(q){
+    const url=`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q)}&utf8=&format=json&origin=*&srlimit=8&srprop=snippet`;
+    const r=await ft(url,8000);const d=await r.json();
+    return(d.query?.search||[]).map(i=>({
+        title:i.title,
+        url:`https://en.wikipedia.org/wiki/${encodeURIComponent(i.title.replace(/ /g,'_'))}`,
+        desc:striptags(i.snippet)+'...'
+    }));
+}
+
+// ── MULTI-SOURCE WEB SEARCH ───────────────────────────
+// All sources fire in parallel. Every API verified CORS-open, no key required.
+
+async function searxSearch(q){
+    const enc=encodeURIComponent(q);
+    const settled=await Promise.allSettled([
+        fetchDDG(q,enc),
+        fetchHN(q,enc),
+        fetchReddit(q,enc),
+        fetchGDELT(q,enc),
+        fetchWikiOpenSearch(q,enc),
+        fetchGitHub(q,enc)
+    ]);
+    const merged=[];
+    const seen=new Set();
+    let srcCount=0;
+    settled.forEach(r=>{
+        if(r.status==='fulfilled'&&Array.isArray(r.value)&&r.value.length){
+            srcCount++;
+            r.value.forEach(item=>{
+                const k=(item.url||'').toLowerCase().replace(/\/$/,'');
+                if(k&&!seen.has(k)){seen.add(k);merged.push(item);}
+            });
+        }
+    });
+    console.log(`[DART] web: ${merged.length} results from ${srcCount} sources`);
+    if(!merged.length) throw new Error('No results');
+    return merged.slice(0,28);
+}
+
+// ── Source A: DuckDuckGo Instant Answer API ──────────
+// Returns abstract + related topics. Great for popular queries.
+async function fetchDDG(q,enc){
+    const r=await ft(`https://api.duckduckgo.com/?q=${enc}&format=json&no_html=1&skip_disambig=1`,8000);
+    if(!r.ok) throw new Error('DDG');
+    const d=await r.json();
+    const out=[];
+    if(d.AbstractURL&&d.Heading) out.push({title:d.Heading,url:d.AbstractURL,desc:d.AbstractText||'DuckDuckGo abstract'});
+    (d.Results||[]).forEach(x=>{if(x.FirstURL&&x.Text) out.push({title:x.Text,url:x.FirstURL,desc:x.Text});});
+    (d.RelatedTopics||[]).forEach(t=>{
+        if(t.FirstURL&&t.Text) out.push({title:t.Text.split(' - ')[0],url:t.FirstURL,desc:t.Text});
+        else if(t.Topics) t.Topics.slice(0,4).forEach(s=>{if(s.FirstURL&&s.Text) out.push({title:s.Text.split(' - ')[0],url:s.FirstURL,desc:s.Text});});
+    });
+    return out.filter(x=>x.url&&x.title);
+}
+
+// ── Source B: Hacker News via Algolia ────────────────
+// Real-time tech/startup/general news with CORS fully open
+async function fetchHN(q,enc){
+    const r=await ft(`https://hn.algolia.com/api/v1/search?query=${enc}&hitsPerPage=10`,7000);
+    if(!r.ok) throw new Error('HN');
+    const d=await r.json();
+    return(d.hits||[]).filter(h=>(h.url||h.story_url)&&h.title).map(h=>({
+        title:h.title,
+        url:h.url||`https://news.ycombinator.com/item?id=${h.objectID}`,
+        desc:`Hacker News · ${h.points||0}pts · ${h.num_comments||0} comments · by ${h.author||'?'}`
+    }));
+}
+
+// ── Source C: Reddit JSON search ─────────────────────
+// .json endpoint is CORS-open; rate limits apply but rare
+async function fetchReddit(q,enc){
+    const r=await ft(`https://www.reddit.com/search.json?q=${enc}&sort=top&limit=10&t=year`,8000);
+    if(!r.ok) throw new Error('Reddit '+r.status);
+    const d=await r.json();
+    return(d.data?.children||[]).map(c=>c.data).filter(p=>p&&p.title).map(p=>({
+        title:p.title,
+        url:p.is_self||!p.url||p.url.includes('reddit.com')?`https://reddit.com${p.permalink}`:p.url,
+        desc:`r/${p.subreddit} · ${p.score||0}pts · ${p.num_comments||0} comments · ${p.domain||''}`
+    }));
+}
+
+// ── Source D: GDELT real-time global news ─────────────
+async function fetchGDELT(q,enc){
+    // GDELT v2 doc API - returns JSON article list, CORS open
+    const url=`https://api.gdeltproject.org/api/v2/doc/doc?query=${enc}&mode=artlist&maxrecords=10&format=json&sort=hybridrel&timespan=FULL`;
+    const r=await ft(url,9000);
+    if(!r.ok) throw new Error('GDELT '+r.status);
+    const text=await r.text();
+    // GDELT sometimes returns HTML errors; check before parsing
+    if(text.trim().startsWith('<')) throw new Error('GDELT html response');
+    const d=JSON.parse(text);
+    return(d.articles||[]).filter(a=>a.url&&a.title).map(a=>({
+        title:a.title,
+        url:a.url,
+        desc:`${a.domain||'news'} · ${(a.seendate||'').slice(0,8)||'recent'} · global news`
+    }));
+}
+
+// ── Source E: Wikipedia OpenSearch (real URLs, CORS open) ─
+// Returns actual linked Wikipedia article URLs — supplements wikiSearch
+async function fetchWikiOpenSearch(q,enc){
+    // Use the morelike search to find related articles beyond exact match
+    const url=`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${enc}&format=json&origin=*&srlimit=6&srprop=snippet&srwhat=text`;
+    const r=await ft(url,7000);
+    if(!r.ok) throw new Error('WikiOS');
+    const d=await r.json();
+    // Also fetch external links from the top article
+    const top=(d.query?.search||[])[0];
+    const results=(d.query?.search||[]).slice(1).map(i=>({
+        title:i.title+' — Wikipedia',
+        url:`https://en.wikipedia.org/wiki/${encodeURIComponent(i.title.replace(/ /g,'_'))}`,
+        desc:striptags(i.snippet||'')+'...'
+    }));
+    // Fetch external links from the top Wikipedia article for this query
+    if(top){
+        try{
+            const elUrl=`https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(top.title)}&prop=extlinks&format=json&origin=*&ellimit=20`;
+            const elR=await ft(elUrl,6000);
+            const elD=await elR.json();
+            const pages=Object.values(elD.query?.pages||{});
+            const links=(pages[0]?.extlinks||[]).map(l=>l['*']||l.url||'').filter(l=>l&&l.startsWith('http')&&!l.includes('wikimedia')&&!l.includes('wikipedia'));
+            links.slice(0,6).forEach(link=>{
+                try{
+                    const host=new URL(link).hostname.replace(/^www\./,'');
+                    results.push({title:`${host} — referenced from "${top.title}"`,url:link,desc:`External link from Wikipedia article: ${top.title}`});
+                }catch(e){}
+            });
+        }catch(e){}
+    }
+    return results;
+}
+
+// ── Source F: GitHub code/repo search ─────────────────
+// CORS open for public search API (no auth = 10 req/min, enough)
+async function fetchGitHub(q,enc){
+    try{
+        const r=await ft(`https://api.github.com/search/repositories?q=${enc}&sort=stars&order=desc&per_page=5`,7000);
+        if(!r.ok) throw new Error('GH '+r.status);
+        const d=await r.json();
+        return(d.items||[]).filter(i=>i.html_url&&i.full_name).map(i=>({
+            title:`${i.full_name} — GitHub`,
+            url:i.html_url,
+            desc:`⭐ ${i.stargazers_count||0} · ${i.description||'GitHub repository'} · ${i.language||''}`
+        }));
+    }catch(e){return[];}
+}
+
+// ── YOUTUBE VIDEO SEARCH ──────────────────────────────
+// Uses the official YouTube Data API v3 — reliable, CORS-open, works everywhere.
+// Free quota: 10,000 units/day. Search costs 100 units → ~100 searches/day free.
+// Restrict this key at: console.cloud.google.com → Credentials → dartalley
+//   → Application restrictions → Websites → dartmeadow.com/*
+
+const YT_API_KEY = 'AIzaSyBrhOod_Q6QoX6XQFyuaipq_ncFvx5lEac';
+const YT_SEARCH_URL = 'https://www.googleapis.com/youtube/v3/search';
+
+function isChannelQuery(q){
+    return /^@/.test(q.trim())||/\b(channel|youtube\.com\/@)\b/i.test(q);
+}
+function cleanHandle(q){ return q.trim().replace(/^@/,''); }
+
+async function searchYouTube(q){
+    const raw=q.trim();
+    const isChannel=isChannelQuery(raw);
+
+    let videos=[];
+
+    if(isChannel){
+        // For @handle queries: search for the channel first, then get its videos
+        videos = await ytChannelVideos(cleanHandle(raw));
+    }
+
+    // If not a channel query or channel lookup got nothing, do keyword search
+    if(!videos.length){
+        videos = await ytSearch(raw);
+    }
+
+    if(!videos.length){
+        setStat('yt','warn','YT: unavailable');
+        return;
+    }
+    renderVideos(videos.slice(0,12), q);
+}
+
+// General video search via YouTube Data API v3
+async function ytSearch(q){
+    try{
+        const params=new URLSearchParams({
+            part:'snippet',
+            q,
+            type:'video',
+            maxResults:12,
+            key:YT_API_KEY
+        });
+        const r=await ft(`${YT_SEARCH_URL}?${params}`,10000);
+        if(!r.ok){
+            const err=await r.json().catch(()=>({}));
+            const msg=err?.error?.message||('HTTP '+r.status);
+            console.warn('[DART] YT API error:',msg);
+            setStat('yt','warn','YT: '+msg.slice(0,40));
+            return [];
+        }
+        const d=await r.json();
+        console.log('[DART] YT API ok, items:',(d.items||[]).length);
+        return (d.items||[]).map(item=>({
+            videoId: item.id?.videoId||'',
+            title:   item.snippet?.title||'',
+            channel: item.snippet?.channelTitle||'',
+            views:   '',
+            duration:'',
+            thumb:   item.snippet?.thumbnails?.medium?.url
+                     ||item.snippet?.thumbnails?.default?.url
+                     ||`https://i.ytimg.com/vi/${item.id?.videoId}/mqdefault.jpg`,
+            url:     `https://youtube.com/watch?v=${item.id?.videoId}`
+        })).filter(v=>v.videoId);
+    }catch(e){
+        console.warn('[DART] YT exception:',e.name, e.message);
+        setStat('yt','warn','YT: '+e.name);
+        return [];
+    }
+}
+
+// Channel search: find channel by handle/name, then return its latest videos
+async function ytChannelVideos(handle){
+    try{
+        // Step 1: find the channel
+        const sp=new URLSearchParams({
+            part:'snippet',
+            q:handle,
+            type:'channel',
+            maxResults:1,
+            key:YT_API_KEY
+        });
+        const r=await ft(`${YT_SEARCH_URL}?${sp}`,10000);
+        if(!r.ok) return [];
+        const d=await r.json();
+        const channelId=d.items?.[0]?.id?.channelId;
+        if(!channelId) return [];
+
+        // Step 2: get latest videos from that channel
+        const vp=new URLSearchParams({
+            part:'snippet',
+            channelId,
+            type:'video',
+            order:'date',
+            maxResults:12,
+            key:YT_API_KEY
+        });
+        const r2=await ft(`${YT_SEARCH_URL}?${vp}`,10000);
+        if(!r2.ok) return [];
+        const d2=await r2.json();
+        return (d2.items||[]).map(item=>({
+            videoId: item.id.videoId,
+            title:   item.snippet.title,
+            channel: item.snippet.channelTitle,
+            views:   '',
+            duration:'',
+            thumb:   item.snippet.thumbnails?.medium?.url
+                     ||`https://i.ytimg.com/vi/${item.id.videoId}/mqdefault.jpg`,
+            url:     `https://youtube.com/watch?v=${item.id.videoId}`
+        })).filter(v=>v.videoId);
+    }catch(e){ return []; }
+}
+
+
+// ── MEDIA TAB SWITCHER ────────────────────────────────
+function switchTab(tab){
+    const ytBtn=document.getElementById('tab-yt');
+    const imgBtn=document.getElementById('tab-img');
+    const vidP=document.getElementById('vidP');
+    const imgP=document.getElementById('imgP');
+    if(tab==='yt'){
+        ytBtn.classList.add('active');
+        imgBtn.classList.remove('active');
+        vidP.classList.add('active');
+        imgP.classList.remove('active');
+    } else {
+        imgBtn.classList.add('active');
+        ytBtn.classList.remove('active');
+        imgP.classList.add('active');
+        vidP.classList.remove('active');
+    }
+}
+
+function renderVideos(videos, q){
+    const vidP=document.getElementById('vidP');
+    const vg=document.getElementById('vg');
+    const vcCount=document.getElementById('vc-count');
+
+    document.getElementById('mediaOuter').style.display='block';
+    vcCount.textContent=videos.length;
+    setBadge('b-yt','cyan');
+    setStat('yt','ok','YT: '+videos.length+' videos');
+
+    videos.forEach((v,i)=>{
+        const dur=typeof v.duration==='number'?fmtDur(v.duration):v.duration||'';
+        const views=typeof v.views==='number'?fmtNum(v.views)+' views':v.views||'';
+
+        const card=document.createElement('a');
+        card.className='vc';
+        card.href=v.url;
+        card.target='_blank';
+        card.rel='noopener';
+        card.style.animationDelay=(i*60)+'ms';
+        card.innerHTML=`
+            <div class="vc-thumb">
+                <img data-src="${esc(v.thumb)}" alt="${esc(v.title)}">
+                <div class="vc-play"><div class="vc-play-btn"></div></div>
+                <div class="vbdg">YT</div>
+                ${dur?`<div style="position:absolute;bottom:5px;right:5px;font-family:'Share Tech Mono',monospace;font-size:0.48rem;background:rgba(0,0,0,0.85);color:#fff;padding:1px 5px;border-radius:2px">${esc(dur)}</div>`:''}
+            </div>
+            <div class="vc-info">
+                <div class="vc-title">${esc(v.title)}</div>
+                <div class="vc-meta">
+                    <span class="vc-ch">${esc(v.channel)}</span>
+                    <span class="vc-dur">${esc(views)}</span>
+                </div>
+            </div>`;
+
+        // NLE click tracking for videos
+        card.addEventListener('click',()=>NLE.onClick(q,{
+            _s:'yt',title:v.title,url:v.url,
+            desc:`YouTube: ${v.channel} · ${views}`
+        }));
+
+        const img=card.querySelector('img');
+        const obs=new IntersectionObserver(e=>{
+            if(e[0].isIntersecting){
+                img.src=img.dataset.src;
+                img.onload=()=>img.classList.add('ok');
+                img.onerror=()=>{img.src=`https://i.ytimg.com/vi/${v.videoId}/default.jpg`;img.classList.add('ok');};
+                obs.disconnect();
+            }
+        },{rootMargin:'80px'});
+        obs.observe(card);
+        vg.appendChild(card);
+    });
+}
+
+function fmtNum(n){
+    if(n>=1e9)return(n/1e9).toFixed(1)+'B';
+    if(n>=1e6)return(n/1e6).toFixed(1)+'M';
+    if(n>=1e3)return(n/1e3).toFixed(1)+'K';
+    return String(n);
+}
+function fmtDur(s){
+    if(!s)return'';
+    const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;
+    return h?`${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`:`${m}:${String(sec).padStart(2,'0')}`;
+}
+
+
+// Source 1: Wikipedia search with page images (reliable, direct CORS)
+// Source 2: Wikimedia Commons file search (direct CORS)
+
+async function searchImages(q){
+    const imgs=[];
+
+    // === SOURCE A: Wikipedia page images via generator search ===
+    try{
+        const url=`https://en.wikipedia.org/w/api.php?`+
+            `action=query&generator=search&gsrsearch=${encodeURIComponent(q)}`+
+            `&prop=pageimages&format=json&origin=*&pithumbsize=500&gsrlimit=20&pilimit=20`;
+        const r=await ft(url,8000);const d=await r.json();
+        const pages=Object.values(d.query?.pages||{});
+        pages.forEach(p=>{
+            if(p.thumbnail){
+                imgs.push({
+                    thumb: p.thumbnail.source,
+                    full:  p.thumbnail.source.replace(/\/\d+px-/,'/800px-'),
+                    title: p.title,
+                    link:  `https://en.wikipedia.org/wiki/${encodeURIComponent((p.title||'').replace(/ /g,'_'))}`,
+                    src:   'WIKIPEDIA'
+                });
+            }
+        });
+    }catch(e){console.warn('[DART] wiki images:',e.message);}
+
+    // === SOURCE B: Wikimedia Commons search ===
+    try{
+        const surl=`https://commons.wikimedia.org/w/api.php?`+
+            `action=query&list=search&srnamespace=6&srsearch=${encodeURIComponent(q)}`+
+            `&format=json&origin=*&srlimit=20&srprop=`;
+        const sr=await ft(surl,8000);const sd=await sr.json();
+        const fileTitles=(sd.query?.search||[]).map(s=>s.title);
+
+        if(fileTitles.length){
+            // Batch fetch image info for all files
+            const titlesParam=fileTitles.slice(0,16).map(t=>encodeURIComponent(t)).join('%7C');
+            const iurl=`https://commons.wikimedia.org/w/api.php?`+
+                `action=query&titles=${titlesParam}`+
+                `&prop=imageinfo&iiprop=url&iiurlwidth=400&format=json&origin=*`;
+            const ir=await ft(iurl,8000);const id2=await ir.json();
+            const ipages=Object.values(id2.query?.pages||{});
+            ipages.forEach(p=>{
+                const ii=p.imageinfo?.[0];
+                if(ii?.thumburl||ii?.url){
+                    const title=(p.title||'').replace(/^File:/,'');
+                    imgs.push({
+                        thumb: ii.thumburl||ii.url,
+                        full:  ii.url||ii.thumburl,
+                        title: title,
+                        link:  `https://commons.wikimedia.org/wiki/${encodeURIComponent(p.title||'')}`,
+                        src:   'WIKIMEDIA'
+                    });
+                }
+            });
+        }
+    }catch(e){console.warn('[DART] wikimedia images:',e.message);}
+
+    // Deduplicate by thumbnail URL
+    const seen=new Set();
+    allImgs=imgs.filter(i=>{if(seen.has(i.thumb))return false;seen.add(i.thumb);return true;});
+
+    if(allImgs.length){
+        setBadge('b-img','purp');
+        setStat('img','ok','IMG: '+allImgs.length+' found');
+        renderImgs(0);
+    } else {
+        setStat('img','warn','IMG: no results');
+    }
+}
+
+function renderImgs(page){
+    const start=page*IPP;
+    const slice=allImgs.slice(start,start+IPP);
+    if(!slice.length)return;
+
+    document.getElementById('mediaOuter').style.display='block';
+    ic.textContent=allImgs.length;
+
+    slice.forEach((img,i)=>{
+        const card=document.createElement('div');
+        card.className='ic shim';
+        card.style.animationDelay=(i*70)+'ms';
+        card.dataset.idx=String(start+i);
+        card.innerHTML=`<img data-src="${esc(img.thumb)}" alt="${esc(img.title)}">
+            <div class="ov">${esc(img.title)}</div>
+            <div class="ibdg">${esc(img.src)}</div>`;
+        card.onclick=()=>openLB(start+i);
+        ig.appendChild(card);
+
+        // Lazy load
+        const el=card.querySelector('img');
+        const obs=new IntersectionObserver(e=>{
+            if(e[0].isIntersecting){
+                el.src=el.dataset.src;
+                el.onload=()=>{el.classList.add('ok');card.classList.remove('shim');};
+                el.onerror=()=>{card.remove();};
+                obs.disconnect();
+            }
+        },{rootMargin:'120px'});
+        obs.observe(card);
+    });
+
+    imgPage=page;
+    moreBtn.style.display=allImgs.length>(page+1)*IPP?'block':'none';
+}
+function loadMore(){renderImgs(imgPage+1);}
+
+// ── LIGHTBOX ──────────────────────────────────────────
+let lbI=0;
+document.getElementById('lb-x').onclick=()=>closeLB();
+document.getElementById('lb').onclick=e=>{if(e.target===document.getElementById('lb'))closeLB();};
+function openLB(idx){
+    lbI=idx;const img=allImgs[idx];if(!img)return;
+    document.getElementById('lb-img').src=img.full||img.thumb;
+    document.getElementById('lb-meta').innerHTML=
+        `${esc(img.title)}<br><a href="${esc(img.link)}" target="_blank" rel="noopener">${esc(img.src)}</a>`;
+    document.getElementById('lb').classList.add('open');
+    document.body.style.overflow='hidden';
+}
+function closeLB(){document.getElementById('lb').classList.remove('open');document.body.style.overflow='';}
+function lbNav(d){const n=lbI+d;if(n>=0&&n<allImgs.length)openLB(n);}
+document.addEventListener('keydown',e=>{
+    if(!document.getElementById('lb').classList.contains('open'))return;
+    if(e.key==='Escape')closeLB();
+    if(e.key==='ArrowRight')lbNav(1);
+    if(e.key==='ArrowLeft')lbNav(-1);
+});
+
+// ── RENDER WEB RESULTS ────────────────────────────────
+let _lastQuery='';
+function renderWeb(results,q){
+    _lastQuery=q;
+    rc.textContent=results.length;
+    if(!results.length){
+        rg.innerHTML=`<div class="nr"><div class="nr-code">404</div><div class="nr-msg">NO PATHWAYS FOR &ldquo;${esc(q)}&rdquo;</div></div>`;
+        return;
+    }
+    const groups={prio:[],local:[],wiki:[],srx:[],dom:[]};
+    results.forEach(r=>(groups[r._s]||groups.srx).push(r));
+    const labels={prio:'◈ DART MEADOW — PRIORITY',local:'◉ LOCAL NEURAL INDEX',wiki:'◉ WIKIPEDIA LIVE FEED',srx:'◉ LIVE WEB — DDG · HN · REDDIT · GDELT',dom:'◈ DOMAIN NETWORK — OFFICIAL SITES'};
+    let delay=0;
+    Object.entries(groups).forEach(([src,items])=>{
+        if(!items.length)return;
+        const d=document.createElement('div');d.className='sdiv';d.textContent=labels[src];rg.appendChild(d);
+        items.forEach(item=>{delay+=50;rg.appendChild(mkCard(item,delay,q));});
+    });
+}
+
+function mkCard(item,delay,q){
+    q=q||_lastQuery;
+    const c=document.createElement('div');
+    c.className='card'+(item._s==='prio'?' prio':item._s==='dom'?' dom':'');
+    c.style.animationDelay=delay+'ms';
+    const bc={prio:'cb-l',local:'cb-l',wiki:'cb-w',srx:'cb-s',dom:'cb-g'}[item._s]||'cb-s';
+    const bl={prio:'DART',local:'LOCAL',wiki:'WIKI',srx:'WEB',dom:'DOMAIN'}[item._s]||'WEB';
+    const dm=getDom(item.url||'');
+    const path=(item.url||'').replace(/^https?:\/\//,'').replace(/^[^\/]*/,'');
+    let tagsHtml='';
+    if(item._s==='dom'&&item.related&&item.related.length){
+        tagsHtml='<div class="dom-tags">'+item.related.map(r=>`<a href="${esc(r.url)}" class="dom-tag${r.live?' live':''}" target="_blank" rel="noopener">${esc(r.label)}</a>`).join('')+'</div>';
+    }
+    // NLE signal strength indicator
+    const sig=NLE.scoreItem(q,item);
+    const sigPct=Math.min(100,Math.max(0,(sig-30)*1.5));
+    const sigColor=sigPct>60?'var(--green)':sigPct>30?'var(--cyan)':'var(--dim)';
+    const sigBar=sig>52?`<div class="nle-bar" title="Neural relevance: ${Math.round(sig)}" style="position:absolute;bottom:0;left:0;height:2px;width:${sigPct}%;background:${sigColor};opacity:0.6;transition:width 0.4s;"></div>`:'';
+
+    c.innerHTML=`<div class="ct"><a href="${esc(item.url||'#')}" class="ctitle nle-link" target="_blank" rel="noopener">${esc(item.title||'Untitled')}</a><span class="cbdg ${bc}">${bl}</span></div><div class="curl"><span class="ud">${esc(dm)}</span>${esc(path)}</div><div class="csnip">${esc(item.desc||'No signal.')}</div>${tagsHtml}${sigBar}`;
+
+    // ── NLE click tracking ──
+    const link=c.querySelector('.nle-link');
+    if(link){
+        let hoverStart=0;
+        c.addEventListener('mouseenter',()=>hoverStart=Date.now());
+        c.addEventListener('mouseleave',()=>{
+            if(hoverStart){ NLE.onDwell(q,item,(Date.now()-hoverStart)/1000); hoverStart=0; }
+        });
+        link.addEventListener('click',()=>{
+            NLE.onClick(q,item);
+            if(hoverStart){ NLE.onDwell(q,item,(Date.now()-hoverStart)/1000); }
+            updateIntelPanel(q);
+        });
+    }
+    return c;
+}
+
+// ── DOMAIN NETWORK DISCOVERY ──────────────────────────
+// Step 1: Ask Wikipedia for the top article matching the query, extract Wikidata ID
+// Step 2: Fetch wikidata entity → official website (P856) + social links
+// Step 3: Generate smart domain candidates & probe them
+// Step 4: Inject domain cards at the TOP of the results grid
+
+async function searchDomains(q, existingResults){
+    const domResults=[];
+    const enc=encodeURIComponent(q);
+
+    // Run probe + Wikidata lookup IN PARALLEL for speed
+    const root=q.toLowerCase().replace(/[^a-z0-9]/g,'');
+    const rootWords=q.toLowerCase().replace(/[^a-z0-9 ]/g,'').split(/\s+/).filter(w=>w.length>2);
+
+    // Build candidate list: query-derived slugs + common TLDs
+    const candidateRoots=[root,...rootWords.map(w=>w),...(rootWords.length>1?[rootWords.join('')]:[])]
+        .filter((v,i,a)=>a.indexOf(v)===i).slice(0,3);
+    const tlds=['.com','.org','.net','.io','.app','.dev','.co','.ai','.band','.music','.studio','.tech'];
+    const allCandidates=[];
+    const seenC=new Set();
+    candidateRoots.forEach(cr=>{
+        tlds.forEach(tld=>{
+            const dom=cr+tld;
+            if(!seenC.has(dom)){seenC.add(dom);allCandidates.push({url:`https://${dom}`,label:dom});}
+        });
+    });
+
+    const [probeResults, wikiResult] = await Promise.allSettled([
+        probeDomains(allCandidates.slice(0,18)),
+        fetchWikiOfficial(q)
+    ]);
+
+    const probed = probeResults.status==='fulfilled'?probeResults.value:[];
+    const wikiOfficial = wikiResult.status==='fulfilled'?wikiResult.value:null;
+
+    if(wikiOfficial&&wikiOfficial.url){
+        // Wikidata has an authoritative answer
+        const officialDom=getDom(wikiOfficial.url);
+        const offRoot=(officialDom.match(/^(?:www\.)?([^.]+)/)||[])[1]||'';
+        // Build related list: probe results for the official root + any live candidates
+        const relCandidates=tlds.map(t=>({url:`https://${offRoot}${t}`,label:`${offRoot}${t}`}));
+        const relProbed=await probeDomains(relCandidates);
+        const related=relProbed.filter(r=>r.label!==officialDom.replace(/^www\./,''));
+        domResults.push({
+            _s:'dom',
+            title:`${wikiOfficial.label} — Official Domain Network`,
+            url:wikiOfficial.url,
+            desc:`Wikidata-verified official website${wikiOfficial.desc?': '+wikiOfficial.desc:''}.`,
+            related:related
+        });
+        setBadge('b-dom','cyan');
+        setStat('dom','ok','DOM: verified official + '+(related.filter(r=>r.live).length)+' probed');
+    } else {
+        // No Wikidata hit — use probe results directly
+        const live=probed.filter(r=>r.live);
+        if(live.length){
+            domResults.push({
+                _s:'dom',
+                title:`${q} — Domain Network`,
+                url:live[0].url,
+                desc:`Live domain(s) found for "${q}". ${live.length} active endpoint(s) detected.`,
+                related:live.slice(1,8)
+            });
+            setBadge('b-dom','cyan');
+            setStat('dom','ok','DOM: '+live.length+' live');
+        } else if(probed.length){
+            // Show candidates even if unconfirmed
+            domResults.push({
+                _s:'dom',
+                title:`${q} — Candidate Domains`,
+                url:probed[0].url,
+                desc:`Possible domain network for "${q}". CORS prevents live confirmation; links may be valid.`,
+                related:probed.slice(1,8)
+            });
+            setBadge('b-dom','cyan');
+            setStat('dom','ok','DOM: '+probed.length+' candidates');
+        }
+    }
+
+    if(domResults.length){
+        const divider=document.createElement('div');
+        divider.className='sdiv';
+        divider.textContent='◈ DOMAIN NETWORK — OFFICIAL SITES';
+        rg.insertBefore(divider,rg.firstChild);
+        [...domResults].reverse().forEach(item=>{
+            const card=mkCard(item,0);
+            rg.insertBefore(card,rg.children[1]||rg.firstChild);
+        });
+        rc.textContent=String(parseInt(rc.textContent||'0')+domResults.length);
+    }
+}
+
+// Fetch official website from Wikidata for a query
+async function fetchWikiOfficial(q){
+    try{
+        const enc=encodeURIComponent(q);
+        const wsR=await ft(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${enc}&utf8=&format=json&origin=*&srlimit=5&srprop=snippet`,7000);
+        const wsD=await wsR.json();
+        const pages=wsD.query?.search||[];
+
+        // Score: prefer org/software/band over person
+        const scored=pages.map(p=>{
+            const tl=p.title.toLowerCase();const ql=q.toLowerCase();
+            let s=0;
+            if(tl===ql)s+=10;else if(tl.startsWith(ql))s+=5;else if(tl.includes(ql))s+=2;
+            if(tl.includes('disambiguation'))s-=10;
+            const sn=(p.snippet||'').toLowerCase();
+            if(/\b(company|software|band|group|organization|foundation|corporation|startup|inc\.|ltd\.)\b/.test(sn))s+=5;
+            if(/\b(born|footballer|politician|actor|actress|singer|rapper|ceo|cto)\b/.test(sn)&&!/\b(company|software|band)\b/.test(sn))s-=5;
+            return{...p,s};
+        }).sort((a,b)=>b.s-a.s);
+
+        const top=scored[0];
+        if(!top)return null;
+
+        // Get wikidata ID
+        const wpR=await ft(`https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(top.title)}&prop=pageprops&format=json&origin=*`,7000);
+        const wpD=await wpR.json();
+        const pg=Object.values(wpD.query?.pages||{})[0];
+        const wdId=pg?.pageprops?.wikibase_item;
+        if(!wdId)return null;
+
+        // Fetch wikidata entity
+        const wdR=await ft(`https://www.wikidata.org/wiki/Special:EntityData/${wdId}.json`,9000);
+        const wdData=await wdR.json();
+        const entity=wdData.entities?.[wdId];
+        if(!entity)return null;
+
+        const sites=(entity.claims?.P856||[]).map(c=>c.mainsnak?.datavalue?.value).filter(Boolean);
+        if(!sites.length)return null;
+
+        return{
+            url:sites[0],
+            label:entity.labels?.en?.value||top.title,
+            desc:entity.descriptions?.en?.value||''
+        };
+    }catch(e){return null;}
+}
+
+async function injectGuessedDomains(q, title, domResults){
+    // kept for compatibility but now handled above
+}
+
+function generateCandidates(root, knownDomain){
+    const tlds=['.com','.org','.net','.io','.app','.dev','.studio','.music','.band'];
+    const prefixes=['','www.'];
+    const candidates=[];
+    const seen=new Set();
+    // If we have a known domain, start with it
+    if(knownDomain){
+        const base=knownDomain.replace(/^www\./,'');
+        if(!seen.has(base)){seen.add(base);candidates.push({url:`https://${base}`,label:base});}
+    }
+    tlds.forEach(tld=>{
+        const dom=root+tld;
+        if(!seen.has(dom)){seen.add(dom);candidates.push({url:`https://${dom}`,label:dom});}
+    });
+    return candidates.slice(0,12);
+}
+
+async function probeDomains(candidates){
+    // no-cors HEAD — opaque response = domain exists, TypeError = DNS/network fail
+    // We use a hidden iframe trick: inject a sandboxed img to test reachability
+    // Actually: no-cors fetch throws TypeError on DNS fail, returns OpaqueResponse on success
+    // The browser WILL log "Failed to fetch" for DNS errors even if caught in JS.
+    // Solution: use a 1px image probe instead — errors are silent.
+    const results=await Promise.all(candidates.map(c=>probeOne(c)));
+    return results.sort((a,b)=>(b.live?1:0)-(a.live?1:0));
+}
+
+function probeOne(c){
+    return new Promise(resolve=>{
+        const img=new Image();
+        const timer=setTimeout(()=>{
+            img.src='';
+            resolve({...c,live:false});
+        },3500);
+        img.onload=()=>{clearTimeout(timer);resolve({...c,live:true});};
+        // onerror can mean domain exists but returns non-image (still live!) 
+        // vs DNS fail which also fires onerror but much faster
+        // We use timing: <200ms = likely DNS fail, >200ms = domain responded
+        const t0=Date.now();
+        img.onerror=()=>{
+            clearTimeout(timer);
+            const elapsed=Date.now()-t0;
+            // If it errored in >150ms, server likely responded (just not an image)
+            resolve({...c,live:elapsed>150});
+        };
+        img.src=c.url+'/favicon.ico?_='+Date.now();
+    });
+}
+
+
+function hit(item,ql){return(item.title||'').toLowerCase().includes(ql)||(item.desc||'').toLowerCase().includes(ql)||(item.tags||[]).some(t=>t.toLowerCase().includes(ql));}
+
+// ft: fetch with timeout. Uses AbortController so no console network error on timeout.
+function ft(url,ms){
+    const ctrl=new AbortController();
+    const tid=setTimeout(()=>ctrl.abort(),ms||8000);
+    return fetch(url,{signal:ctrl.signal}).finally(()=>clearTimeout(tid));
+}
+function striptags(s){return s.replace(/<[^>]+>/g,'').replace(/&quot;/g,'"').replace(/&amp;/g,'&').replace(/&#(\d+);/g,(_,n)=>String.fromCharCode(n));}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function getDom(u){try{return new URL(u).hostname;}catch{return u;}}
+</script>
+</body>
+</html>
