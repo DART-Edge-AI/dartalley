@@ -1,0 +1,3515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DART ALLEY | Aerospace Neural Search</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cyan:    #00e5ff;
+            --orange:  #ff6b35;
+            --green:   #39ff14;
+            --purple:  #c084fc;
+            --void:    #020408;
+            --panel:   rgba(0,229,255,0.04);
+            --panel-b: rgba(0,229,255,0.08);
+            --border:  rgba(0,229,255,0.18);
+            --text:    #c8d8e8;
+            --dim:     #4a6070;
+        }
+        *{margin:0;padding:0;box-sizing:border-box;}
+        html{scroll-behavior:smooth;}
+        body{font-family:'Exo 2',sans-serif;background:var(--void);color:var(--text);min-height:100vh;overflow-x:hidden;}
+        body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,rgba(0,0,0,0) 0px,rgba(0,0,0,0) 2px,rgba(0,0,0,0.055) 2px,rgba(0,0,0,0.055) 4px);pointer-events:none;z-index:9999;}
+        #sc{position:fixed;inset:0;z-index:0;pointer-events:none;}
+
+        /* CORNER BRACKETS */
+        .cnr{position:fixed;width:55px;height:55px;opacity:0.18;pointer-events:none;z-index:2;}
+        .cnr.tl{top:16px;left:16px;border-top:2px solid var(--cyan);border-left:2px solid var(--cyan);}
+        .cnr.br{bottom:16px;right:16px;border-bottom:2px solid var(--orange);border-right:2px solid var(--orange);}
+
+        .app{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;padding:0 16px 80px;}
+
+        /* HUD */
+        .hud{width:100%;max-width:960px;display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--dim);letter-spacing:1px;}
+        .hud-l{display:flex;gap:18px;}
+        .ind{display:flex;align-items:center;gap:5px;}
+        .dot{width:6px;height:6px;border-radius:50%;}
+        .dot.g{background:var(--green);box-shadow:0 0 5px var(--green);animation:pd 2s ease-in-out infinite;}
+        .dot.o{background:var(--orange);box-shadow:0 0 5px var(--orange);animation:pd 2.5s ease-in-out infinite;}
+        @keyframes pd{0%,100%{opacity:1}50%{opacity:0.25}}
+        #htime{color:var(--cyan);}
+
+        /* LOGO */
+        .logo{margin-top:5vh;text-align:center;margin-bottom:36px;}
+        .logo-eye{font-family:'Share Tech Mono',monospace;font-size:0.7rem;letter-spacing:7px;color:var(--orange);text-transform:uppercase;margin-bottom:10px;}
+        .logo-main{font-family:'Orbitron',monospace;font-size:clamp(2.4rem,8vw,4.8rem);font-weight:900;letter-spacing:5px;color:#fff;text-transform:uppercase;text-shadow:0 0 40px rgba(0,229,255,0.7),0 0 80px rgba(0,229,255,0.2);animation:breathe 4s ease-in-out infinite;}
+        @keyframes breathe{0%,100%{text-shadow:0 0 40px rgba(0,229,255,0.6),0 0 80px rgba(0,229,255,0.2)}50%{text-shadow:0 0 60px rgba(0,229,255,1),0 0 120px rgba(0,229,255,0.4)}}
+        .logo-sub{font-family:'Orbitron',monospace;font-size:clamp(0.7rem,2vw,1.05rem);font-weight:400;letter-spacing:10px;color:var(--cyan);text-transform:uppercase;margin-top:8px;opacity:0.8;}
+        .logo-line{height:1px;width:260px;margin:16px auto 0;background:linear-gradient(90deg,transparent,var(--cyan),var(--orange),transparent);}
+
+        /* BADGES */
+        .badges{display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap;}
+        .badge{font-family:'Share Tech Mono',monospace;font-size:0.58rem;letter-spacing:1.5px;padding:4px 10px;border:1px solid var(--border);border-radius:2px;color:var(--dim);display:flex;align-items:center;gap:5px;transition:all 0.3s;}
+        .badge.cyan{color:var(--cyan);border-color:rgba(0,229,255,0.4);}
+        .badge.orng{color:var(--orange);border-color:rgba(255,107,53,0.4);}
+        .badge.purp{color:var(--purple);border-color:rgba(192,132,252,0.4);}
+        .bdot{width:5px;height:5px;border-radius:50%;background:currentColor;box-shadow:0 0 4px currentColor;}
+
+        /* SEARCH */
+        .sw{width:100%;max-width:700px;}
+        .sf{position:relative;border:1px solid var(--border);border-radius:4px;background:var(--panel);backdrop-filter:blur(8px);}
+        .sf::before{content:'QUERY INPUT';position:absolute;top:-9px;left:14px;font-family:'Share Tech Mono',monospace;font-size:0.56rem;letter-spacing:2px;color:var(--cyan);background:var(--void);padding:0 6px;}
+        .sf::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,var(--cyan),transparent 70%);opacity:0.45;}
+        .si{display:flex;align-items:center;padding:6px 8px;}
+        .pfx{font-family:'Share Tech Mono',monospace;color:var(--orange);font-size:1rem;padding:0 10px;flex-shrink:0;}
+        input[type="text"]{flex:1;padding:12px 8px;font-size:1rem;background:transparent;border:none;color:#fff;outline:none;font-family:'Share Tech Mono',monospace;letter-spacing:0.5px;caret-color:var(--cyan);}
+        input::placeholder{color:var(--dim);font-size:0.85rem;}
+        .bscan{font-family:'Orbitron',monospace;font-size:0.62rem;font-weight:700;letter-spacing:2px;padding:10px 18px;background:linear-gradient(135deg,var(--cyan),rgba(0,180,220,0.8));color:var(--void);border:none;border-radius:2px;cursor:pointer;transition:all 0.2s;text-transform:uppercase;white-space:nowrap;}
+        .bscan:hover{box-shadow:0 0 20px rgba(0,229,255,0.4);transform:translateY(-1px);}
+        .bscan:active{transform:translateY(0);}
+        .bscan:disabled{opacity:0.45;cursor:not-allowed;transform:none;}
+
+        /* SEARCH HISTORY DROPDOWN */
+        .sh-drop{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#050d14;border:1px solid var(--border);border-top:none;border-radius:0 0 4px 4px;z-index:9000;display:none;flex-direction:column;max-height:320px;overflow-y:auto;box-shadow:0 14px 40px rgba(0,0,0,0.75);scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+        .sh-drop.open{display:flex;}
+        .sh-drop::-webkit-scrollbar{width:4px;}
+        .sh-drop::-webkit-scrollbar-track{background:transparent;}
+        .sh-drop::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+        .sh-hdr{font-family:'Share Tech Mono',monospace;font-size:0.52rem;letter-spacing:2px;color:var(--dim);padding:7px 14px 5px;border-bottom:1px solid var(--border);text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
+        .sh-hdr-clear{color:rgba(255,107,53,0.55);cursor:pointer;letter-spacing:1px;font-size:0.5rem;transition:color 0.2s;}
+        .sh-hdr-clear:hover{color:var(--orange);}
+        .sh-item{display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;transition:background 0.15s;border-bottom:1px solid rgba(0,229,255,0.05);font-family:'Share Tech Mono',monospace;font-size:0.75rem;color:var(--text);letter-spacing:0.5px;flex-shrink:0;}
+        .sh-item:last-child{border-bottom:none;}
+        .sh-item:hover,.sh-item.focused{background:rgba(0,229,255,0.07);}
+        .sh-item.focused{outline:none;}
+        .sh-icon{color:var(--dim);font-size:0.8rem;flex-shrink:0;width:14px;text-align:center;}
+        .sh-item:hover .sh-icon,.sh-item.focused .sh-icon{color:var(--cyan);}
+        .sh-text{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+        .sh-text em{font-style:normal;color:var(--cyan);}
+        .sh-del{color:var(--dim);font-size:0.75rem;padding:2px 5px;border-radius:2px;transition:all 0.15s;flex-shrink:0;opacity:0;margin-left:auto;}
+        .sh-item:hover .sh-del,.sh-item.focused .sh-del{opacity:1;}
+        .sh-del:hover{color:var(--orange);background:rgba(255,107,53,0.1);}
+        .sh-empty{font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--dim);padding:16px 14px;text-align:center;letter-spacing:1px;}
+
+        /* FILTERS */
+        .frow{display:flex;gap:7px;margin-top:12px;flex-wrap:wrap;}
+        .ft{font-family:'Share Tech Mono',monospace;font-size:0.6rem;letter-spacing:1px;padding:5px 11px;border:1px solid var(--border);border-radius:2px;color:var(--dim);cursor:pointer;transition:all 0.2s;text-transform:uppercase;background:transparent;user-select:none;}
+        .ft.on-c{color:var(--cyan);border-color:rgba(0,229,255,0.5);background:rgba(0,229,255,0.05);}
+        .ft.on-o{color:var(--orange);border-color:rgba(255,107,53,0.5);background:rgba(255,107,53,0.05);}
+        .ft.on-p{color:var(--purple);border-color:rgba(192,132,252,0.5);background:rgba(192,132,252,0.05);}
+
+        /* STATUS */
+        .sbar{width:100%;max-width:700px;margin-top:10px;font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--dim);letter-spacing:1px;min-height:20px;display:flex;gap:14px;flex-wrap:wrap;}
+        .s2{display:flex;align-items:center;gap:4px;}
+        .s2.ok{color:var(--green);}
+        .s2.warn{color:var(--orange);}
+        .s2.err{color:#ef4444;}
+
+        /* LOADER */
+        .lw{display:none;flex-direction:column;align-items:center;gap:14px;margin-top:50px;}
+        .radar{width:56px;height:56px;border-radius:50%;border:2px solid var(--border);border-top-color:var(--cyan);border-right-color:var(--orange);animation:spin 0.9s linear infinite;}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .ltxt{font-family:'Share Tech Mono',monospace;font-size:0.72rem;color:var(--cyan);letter-spacing:3px;animation:blink 1.2s step-end infinite;}
+        @keyframes blink{0%,100%{opacity:1}50%{opacity:0.15}}
+
+        /* RESULTS LAYOUT */
+        .rw{width:100%;max-width:1160px;margin-top:36px;display:none;}
+        .ri{display:grid;grid-template-columns:1fr 360px;gap:22px;align-items:start;}
+        @media(max-width:820px){.ri{grid-template-columns:1fr;}}
+
+        /* PANEL HEADERS */
+        .ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+        .pl{font-family:'Orbitron',monospace;font-size:0.58rem;letter-spacing:3px;color:var(--cyan);text-transform:uppercase;}
+        .pm{font-family:'Share Tech Mono',monospace;font-size:0.66rem;color:var(--dim);}
+        .pm b{color:var(--orange);}
+
+        /* WEB RESULTS */
+        .rg{display:grid;grid-template-columns:1fr;gap:9px;}
+        .sdiv{font-family:'Share Tech Mono',monospace;font-size:0.6rem;letter-spacing:3px;color:var(--dim);text-transform:uppercase;margin:14px 0 7px;display:flex;align-items:center;gap:10px;}
+        .sdiv::after{content:'';flex:1;height:1px;background:var(--border);}
+
+        /* CARDS */
+        .card{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--cyan);border-radius:0 4px 4px 0;padding:14px 17px;transition:all 0.2s;position:relative;overflow:hidden;animation:cs 0.3s ease forwards;opacity:0;transform:translateX(-8px);}
+        @keyframes cs{to{opacity:1;transform:translateX(0)}}
+        .card.prio{border-left-color:var(--orange);background:rgba(255,107,53,0.03);}
+        .card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,var(--cyan),transparent 55%);opacity:0.22;}
+        .card.prio::before{background:linear-gradient(90deg,var(--orange),transparent 55%);}
+        .card:hover{transform:translateX(4px);background:var(--panel-b);box-shadow:0 4px 22px rgba(0,0,0,0.35);}
+        .ct{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:4px;}
+        .ctitle{font-family:'Exo 2',sans-serif;font-weight:600;font-size:0.95rem;color:var(--cyan);text-decoration:none;line-height:1.3;flex:1;transition:color 0.2s;}
+        .card.prio .ctitle{color:var(--orange);}
+        .ctitle:hover{color:#fff;}
+        .cbdg{font-family:'Share Tech Mono',monospace;font-size:0.48rem;letter-spacing:1.5px;padding:2px 6px;border-radius:2px;flex-shrink:0;text-transform:uppercase;margin-top:3px;}
+        .cb-l{color:var(--orange);border:1px solid rgba(255,107,53,0.4);background:rgba(255,107,53,0.08);}
+        .cb-w{color:#a0c4ff;border:1px solid rgba(160,196,255,0.3);background:rgba(160,196,255,0.05);}
+        .cb-s{color:var(--cyan);border:1px solid rgba(0,229,255,0.3);background:rgba(0,229,255,0.05);}
+        .curl{font-family:'Share Tech Mono',monospace;font-size:0.64rem;color:var(--dim);margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+        .ud{color:rgba(0,229,255,0.5);}
+        .card.prio .ud{color:rgba(255,107,53,0.6);}
+        .csnip{font-size:0.85rem;color:var(--text);line-height:1.6;opacity:0.8;}
+
+        /* ── IMAGE PANEL ── */
+        .img-panel{position:sticky;top:20px;}
+        .img-panel .pl{color:var(--purple);}
+        .img-panel .ph{border-color:rgba(192,132,252,0.2);}
+        .img-panel .pm b{color:var(--purple);}
+
+        .ig{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+
+        .ic{position:relative;aspect-ratio:4/3;overflow:hidden;border-radius:3px;border:1px solid rgba(192,132,252,0.18);background:rgba(192,132,252,0.04);cursor:pointer;transition:all 0.25s;animation:cs 0.35s ease forwards;opacity:0;}
+        .ic:hover{border-color:rgba(192,132,252,0.6);transform:scale(1.03);z-index:5;box-shadow:0 8px 28px rgba(0,0,0,0.65);}
+        .ic img{width:100%;height:100%;object-fit:cover;display:block;transition:opacity 0.35s;opacity:0;}
+        .ic img.ok{opacity:1;}
+        .ic .ov{position:absolute;bottom:0;left:0;right:0;padding:5px 7px;background:linear-gradient(transparent,rgba(0,0,0,0.88));font-family:'Share Tech Mono',monospace;font-size:0.5rem;color:#ccc;letter-spacing:0.5px;opacity:0;transition:opacity 0.2s;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+        .ic:hover .ov{opacity:1;}
+        .ic .ibdg{position:absolute;top:4px;right:4px;font-family:'Share Tech Mono',monospace;font-size:0.42rem;letter-spacing:1px;padding:2px 5px;background:rgba(0,0,0,0.72);border:1px solid rgba(192,132,252,0.4);border-radius:2px;color:var(--purple);text-transform:uppercase;}
+
+        /* shimmer */
+        .ic.shim::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(192,132,252,0.04) 25%,rgba(192,132,252,0.1) 50%,rgba(192,132,252,0.04) 75%);background-size:200% 100%;animation:sh 1.4s infinite;}
+        @keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+        /* source label under image grid */
+        .img-src-note{font-family:'Share Tech Mono',monospace;font-size:0.56rem;color:var(--dim);text-align:center;margin-top:8px;letter-spacing:1px;}
+        .img-src-note span{color:var(--purple);}
+
+
+        /* MEDIA TABS */
+        .media-panel{width:100%;display:none;}
+        .media-panel.active{display:block;}
+        .tab-bar{display:flex;gap:0;margin-bottom:10px;border-bottom:1px solid var(--border);}
+        .tab-btn{font-family:'Share Tech Mono',monospace;font-size:0.6rem;letter-spacing:2px;padding:7px 14px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--dim);cursor:pointer;transition:all 0.2s;text-transform:uppercase;position:relative;bottom:-1px;}
+        .tab-btn.active{color:var(--cyan);border-bottom-color:var(--cyan);}
+        .tab-btn.active.yt{color:var(--orange);border-bottom-color:var(--orange);}
+        .tab-btn .tab-count{font-size:0.52rem;margin-left:5px;opacity:0.7;}
+        .tab-btn:hover:not(.active){color:var(--text);}
+        /* LOAD MORE */
+        .more-btn{font-family:'Share Tech Mono',monospace;font-size:0.58rem;letter-spacing:2px;color:var(--dim);text-align:center;margin-top:9px;padding:8px;border:1px solid var(--border);border-radius:2px;cursor:pointer;transition:all 0.2s;text-transform:uppercase;display:none;}
+        .more-btn:hover{color:var(--purple);border-color:rgba(192,132,252,0.4);background:rgba(192,132,252,0.04);}
+
+        /* LIGHTBOX */
+        .lb{display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.93);backdrop-filter:blur(14px);align-items:center;justify-content:center;flex-direction:column;gap:14px;padding:20px;}
+        .lb.open{display:flex;}
+        .lb-img{max-width:90vw;max-height:76vh;object-fit:contain;border:1px solid rgba(192,132,252,0.3);border-radius:4px;box-shadow:0 0 60px rgba(0,0,0,0.8);}
+        .lb-meta{font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:#ccc;letter-spacing:1px;text-align:center;max-width:70vw;}
+        .lb-meta a{color:var(--purple);text-decoration:none;}
+        .lb-meta a:hover{color:#fff;}
+        .lb-x{position:fixed;top:18px;right:22px;font-size:1.3rem;color:var(--dim);cursor:pointer;transition:color 0.2s;z-index:10001;font-family:monospace;}
+        .lb-x:hover{color:#fff;}
+        .lb-nav{display:flex;gap:18px;margin-top:4px;}
+        .lb-nav button{font-family:'Share Tech Mono',monospace;font-size:0.63rem;letter-spacing:2px;padding:6px 16px;border:1px solid var(--border);border-radius:2px;background:transparent;color:var(--dim);cursor:pointer;transition:all 0.2s;text-transform:uppercase;}
+        .lb-nav button:hover{color:var(--cyan);border-color:var(--cyan);}
+
+        /* NO RESULTS */
+        .nr{text-align:center;padding:55px 20px;}
+        .nr-code{font-family:'Orbitron',monospace;font-size:2.8rem;color:var(--border);margin-bottom:10px;}
+        .nr-msg{font-family:'Share Tech Mono',monospace;color:var(--dim);font-size:0.78rem;letter-spacing:2px;}
+
+        .footer{margin-top:60px;text-align:center;font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--dim);letter-spacing:2px;border-top:1px solid var(--border);width:90%;max-width:960px;padding-top:18px;}
+        .footer span{color:var(--orange);}
+        .iframe-warn{display:none;width:100%;max-width:700px;margin-top:14px;padding:14px 18px;border:1px solid rgba(255,107,53,0.5);border-left:3px solid var(--orange);border-radius:0 4px 4px 0;background:rgba(255,107,53,0.06);font-family:'Share Tech Mono',monospace;font-size:0.68rem;color:var(--orange);letter-spacing:1px;line-height:1.8;}
+        .iframe-warn .iw-title{font-family:'Orbitron',monospace;font-size:0.62rem;letter-spacing:2px;margin-bottom:8px;}
+        .iframe-warn .iw-dim{color:var(--dim);margin-top:6px;font-size:0.61rem;}
+
+        /* ── NEURAL INTELLIGENCE PANEL ── */
+        .intel-panel{width:100%;max-width:700px;margin-top:10px;display:none;border:1px solid rgba(57,255,20,0.2);border-left:3px solid var(--green);border-radius:0 4px 4px 0;background:rgba(57,255,20,0.02);padding:10px 14px;animation:cs 0.3s ease forwards;}
+        .intel-panel.show{display:block;}
+        .intel-hdr{font-family:'Orbitron',monospace;font-size:0.52rem;letter-spacing:3px;color:var(--green);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;}
+        .intel-hdr span{color:var(--dim);font-size:0.48rem;cursor:pointer;letter-spacing:1px;}
+        .intel-hdr span:hover{color:var(--green);}
+        .intel-row{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start;}
+        .intel-col{flex:1;min-width:120px;}
+        .intel-label{font-family:'Share Tech Mono',monospace;font-size:0.52rem;color:var(--dim);letter-spacing:2px;margin-bottom:5px;text-transform:uppercase;}
+        .intel-tags{display:flex;flex-wrap:wrap;gap:4px;}
+        .intel-tag{font-family:'Share Tech Mono',monospace;font-size:0.56rem;padding:2px 8px;border:1px solid rgba(57,255,20,0.3);border-radius:2px;color:rgba(57,255,20,0.8);background:rgba(57,255,20,0.04);cursor:pointer;transition:all 0.2s;}
+        .intel-tag:hover{background:rgba(57,255,20,0.12);border-color:var(--green);color:var(--green);}
+        .intel-tag.domain{border-color:rgba(0,229,255,0.3);color:rgba(0,229,255,0.7);background:rgba(0,229,255,0.03);}
+        .intel-tag.domain:hover{border-color:var(--cyan);color:var(--cyan);}
+        .intel-stats{font-family:'Share Tech Mono',monospace;font-size:0.52rem;color:var(--dim);margin-top:6px;}
+        .intel-stats b{color:var(--green);}
+
+        .ft.on-g{color:var(--green);border-color:rgba(57,255,20,0.5);background:rgba(57,255,20,0.05);}
+        .ft.on-r{color:#ff4444;border-color:rgba(255,68,68,0.5);background:rgba(255,68,68,0.05);}
+
+        /* DOMAIN NETWORK CARDS */
+        .card.dom{border-left-color:var(--green);background:rgba(57,255,20,0.02);}
+        .card.dom::before{background:linear-gradient(90deg,var(--green),transparent 55%);}
+        .card.dom .ctitle{color:var(--green);}
+        .card.dom .ud{color:rgba(57,255,20,0.6);}
+        .cb-g{color:var(--green);border:1px solid rgba(57,255,20,0.35);background:rgba(57,255,20,0.06);}
+        .dom-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;}
+        .dom-tag{font-family:'Share Tech Mono',monospace;font-size:0.56rem;letter-spacing:1px;padding:2px 8px;border:1px solid rgba(57,255,20,0.25);border-radius:2px;color:rgba(57,255,20,0.7);background:rgba(57,255,20,0.04);text-decoration:none;transition:all 0.2s;}
+        .dom-tag:hover{border-color:var(--green);color:var(--green);background:rgba(57,255,20,0.1);}
+        .dom-tag.live{border-color:rgba(57,255,20,0.5);color:var(--green);}
+        .dom-tag.dead{opacity:0.35;text-decoration:line-through;}
+
+        /* ── VIDEO PANEL ── */
+        .vid-panel{margin-top:22px;}
+        .vid-panel .pl{color:#ff4444;}
+        .vid-panel .ph{border-color:rgba(255,68,68,0.2);}
+        .vid-panel .pm b{color:#ff4444;}
+
+        .vg{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+        @media(max-width:520px){.vg{grid-template-columns:1fr;}}
+
+        /* VIDEO CARD — now a div since thumbnail opens overlay, not a page link */
+        .vc{position:relative;border-radius:4px;border:1px solid rgba(255,68,68,0.18);background:rgba(255,68,68,0.03);cursor:pointer;transition:all 0.25s;animation:cs 0.35s ease forwards;opacity:0;overflow:hidden;display:block;}
+        .vc:hover{border-color:rgba(255,68,68,0.55);transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,0.65);}
+        .vc-thumb{position:relative;aspect-ratio:16/9;overflow:hidden;background:#111;}
+        .vc-thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:opacity 0.35s;opacity:0;}
+        .vc-thumb img.ok{opacity:1;}
+        .vc-play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.2s;}
+        .vc:hover .vc-play{opacity:1;}
+        .vc-play-btn{width:40px;height:40px;background:rgba(255,0,0,0.88);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(0,0,0,0.6);}
+        .vc-play-btn::after{content:'';border-left:14px solid #fff;border-top:8px solid transparent;border-bottom:8px solid transparent;margin-left:3px;}
+        .vc-info{padding:8px 10px 10px;}
+        .vc-title{font-family:'Exo 2',sans-serif;font-size:0.78rem;font-weight:600;color:#e8e8e8;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+        .vc-meta{font-family:'Share Tech Mono',monospace;font-size:0.52rem;color:var(--dim);margin-top:5px;display:flex;justify-content:space-between;align-items:center;}
+        .vc-ch{color:rgba(255,68,68,0.7);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70%;}
+        .vc-dur{color:var(--dim);flex-shrink:0;}
+        .vbdg{position:absolute;top:5px;right:5px;font-family:'Share Tech Mono',monospace;font-size:0.42rem;letter-spacing:1px;padding:2px 5px;background:rgba(0,0,0,0.8);border:1px solid rgba(255,68,68,0.5);border-radius:2px;color:#ff4444;text-transform:uppercase;}
+
+        /* Watch on YouTube link inside the video card info area */
+        .vc-yt-link{display:inline-flex;align-items:center;gap:5px;font-family:'Share Tech Mono',monospace;font-size:0.5rem;letter-spacing:1.5px;color:rgba(255,68,68,0.55);text-decoration:none;border:1px solid rgba(255,68,68,0.22);border-radius:2px;padding:2px 7px;margin-top:6px;transition:all 0.2s;text-transform:uppercase;}
+        .vc-yt-link:hover{color:#ff4444;border-color:rgba(255,68,68,0.6);background:rgba(255,68,68,0.08);}
+        .vc-yt-link::before{content:'↗';font-size:0.55rem;}
+
+        /* YT-boosted card indicator */
+        .yt-signal-badge{position:absolute;top:5px;left:5px;font-family:'Share Tech Mono',monospace;font-size:0.42rem;letter-spacing:1px;padding:2px 5px;background:rgba(0,0,0,0.75);border:1px solid rgba(255,68,68,0.4);border-radius:2px;color:rgba(255,68,68,0.8);text-transform:uppercase;pointer-events:none;z-index:2;}
+
+        /* ── YOUTUBE PREVIEW OVERLAY ── */
+        /* Covers the full viewport. The user can watch the video without leaving the page.
+           Pressing Escape or clicking the backdrop closes the overlay and stops playback.
+           A prominent "Watch on YouTube" link is shown below the player for direct navigation. */
+        #yt-overlay{
+            display:none;
+            position:fixed;
+            inset:0;
+            z-index:10000;
+            background:rgba(0,0,0,0.95);
+            backdrop-filter:blur(18px);
+            align-items:center;
+            justify-content:center;
+            flex-direction:column;
+            gap:16px;
+            padding:20px;
+        }
+        #yt-overlay.open{display:flex;}
+
+        .yt-ov-close{
+            position:fixed;
+            top:18px;
+            right:22px;
+            font-size:1.3rem;
+            color:var(--dim);
+            cursor:pointer;
+            transition:color 0.2s;
+            z-index:10001;
+            font-family:monospace;
+            line-height:1;
+        }
+        .yt-ov-close:hover{color:#fff;}
+
+        .yt-ov-frame-wrap{
+            position:relative;
+            width:min(860px,94vw);
+            aspect-ratio:16/9;
+            border:1px solid rgba(255,68,68,0.3);
+            border-radius:4px;
+            overflow:hidden;
+            box-shadow:0 0 80px rgba(0,0,0,0.95);
+            background:#000;
+        }
+        .yt-ov-frame-wrap iframe{
+            width:100%;
+            height:100%;
+            border:none;
+            display:block;
+        }
+
+        /* Top label bar above the player */
+        .yt-ov-top-bar{
+            width:min(860px,94vw);
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:10px;
+        }
+        .yt-ov-label{
+            font-family:'Orbitron',monospace;
+            font-size:0.52rem;
+            letter-spacing:3px;
+            color:#ff4444;
+            text-transform:uppercase;
+            display:flex;
+            align-items:center;
+            gap:8px;
+        }
+        .yt-ov-label::before{
+            content:'▶';
+            font-size:0.6rem;
+        }
+        .yt-ov-esc-hint{
+            font-family:'Share Tech Mono',monospace;
+            font-size:0.5rem;
+            color:var(--dim);
+            letter-spacing:1px;
+        }
+
+        /* Bottom info row below the player */
+        .yt-ov-bottom{
+            width:min(860px,94vw);
+            display:flex;
+            align-items:flex-start;
+            justify-content:space-between;
+            gap:16px;
+            flex-wrap:wrap;
+        }
+        .yt-ov-text{
+            flex:1;
+            min-width:0;
+        }
+        .yt-ov-title{
+            font-family:'Exo 2',sans-serif;
+            font-size:0.95rem;
+            font-weight:600;
+            color:#e8e8e8;
+            line-height:1.4;
+            margin-bottom:4px;
+        }
+        .yt-ov-channel{
+            font-family:'Share Tech Mono',monospace;
+            font-size:0.62rem;
+            color:rgba(255,68,68,0.7);
+            letter-spacing:1px;
+        }
+
+        /* The main "Watch on YouTube" button below the player —
+           this is how the user navigates to the actual YouTube video page. */
+        .yt-ov-goto{
+            font-family:'Orbitron',monospace;
+            font-size:0.58rem;
+            font-weight:700;
+            letter-spacing:2px;
+            padding:10px 20px;
+            border:1px solid rgba(255,68,68,0.55);
+            border-radius:2px;
+            color:#ff4444;
+            text-decoration:none;
+            transition:all 0.2s;
+            text-transform:uppercase;
+            white-space:nowrap;
+            flex-shrink:0;
+            display:flex;
+            align-items:center;
+            gap:8px;
+            background:rgba(255,68,68,0.06);
+        }
+        .yt-ov-goto:hover{
+            background:rgba(255,68,68,0.18);
+            border-color:#ff4444;
+            color:#fff;
+            box-shadow:0 0 18px rgba(255,68,68,0.25);
+        }
+        .yt-ov-goto-icon{
+            font-size:0.8rem;
+            line-height:1;
+        }
+
+        .cb-r{color:#ff4444;border:1px solid rgba(255,68,68,0.4);background:rgba(255,68,68,0.06);}
+
+        /* ── SOCIAL / PLATFORM SEARCH CARDS ── */
+        /* IMDb — amber/gold */
+        .card.imdb{border-left-color:#f5c518;background:rgba(245,197,24,0.02);}
+        .card.imdb::before{background:linear-gradient(90deg,#f5c518,transparent 55%);}
+        .card.imdb .ctitle{color:#f5c518;}
+        .card.imdb .ud{color:rgba(245,197,24,0.6);}
+        .cb-imdb{color:#f5c518;border:1px solid rgba(245,197,24,0.4);background:rgba(245,197,24,0.06);}
+        /* LinkedIn — blue */
+        .card.li{border-left-color:#0a66c2;background:rgba(10,102,194,0.03);}
+        .card.li::before{background:linear-gradient(90deg,#0a66c2,transparent 55%);}
+        .card.li .ctitle{color:#4da3f7;}
+        .card.li .ud{color:rgba(77,163,247,0.6);}
+        .cb-li{color:#4da3f7;border:1px solid rgba(10,102,194,0.4);background:rgba(10,102,194,0.06);}
+        /* Instagram — pink/purple gradient approximation */
+        .card.ig-s{border-left-color:#e1306c;background:rgba(225,48,108,0.02);}
+        .card.ig-s::before{background:linear-gradient(90deg,#e1306c,transparent 55%);}
+        .card.ig-s .ctitle{color:#f77ab7;}
+        .card.ig-s .ud{color:rgba(247,122,183,0.6);}
+        .cb-ig{color:#f77ab7;border:1px solid rgba(225,48,108,0.4);background:rgba(225,48,108,0.06);}
+        /* Twitter/X — white/silver */
+        .card.twx{border-left-color:#e7e9ea;background:rgba(231,233,234,0.02);}
+        .card.twx::before{background:linear-gradient(90deg,#e7e9ea,transparent 55%);}
+        .card.twx .ctitle{color:#e7e9ea;}
+        .card.twx .ud{color:rgba(231,233,234,0.5);}
+        .cb-twx{color:#e7e9ea;border:1px solid rgba(231,233,234,0.25);background:rgba(231,233,234,0.04);}
+
+        /* Filter toggle active states for new platforms */
+        .ft.on-imdb{color:#f5c518;border-color:rgba(245,197,24,0.5);background:rgba(245,197,24,0.05);}
+        .ft.on-li{color:#4da3f7;border-color:rgba(10,102,194,0.5);background:rgba(10,102,194,0.05);}
+        .ft.on-ig{color:#f77ab7;border-color:rgba(225,48,108,0.5);background:rgba(225,48,108,0.05);}
+        .ft.on-twx{color:#e7e9ea;border-color:rgba(231,233,234,0.35);background:rgba(231,233,234,0.04);}
+
+        /* ── IMDB POSTER PANEL ── */
+        /* Visual grid of movie/show poster thumbnails fetched from OMDb API.
+           Displayed in the media panel under the ★ IMDB tab alongside the
+           video and image tabs. Poster aspect ratio is 2:3 (portrait) like
+           standard movie posters. Clicking opens the IMDb page directly. */
+        .poster-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;}
+        @media(max-width:520px){.poster-grid{grid-template-columns:1fr 1fr;}}
+        .poster-card{position:relative;border-radius:3px;border:1px solid rgba(245,197,24,0.2);background:rgba(245,197,24,0.03);overflow:hidden;cursor:pointer;transition:all 0.25s;animation:cs 0.35s ease forwards;opacity:0;display:block;text-decoration:none;}
+        .poster-card:hover{border-color:rgba(245,197,24,0.6);transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,0.65);}
+        .poster-img-wrap{position:relative;aspect-ratio:2/3;overflow:hidden;background:#111;}
+        .poster-img-wrap img{width:100%;height:100%;object-fit:cover;display:block;transition:opacity 0.35s;opacity:0;}
+        .poster-img-wrap img.ok{opacity:1;}
+        .poster-rating{position:absolute;top:5px;right:5px;font-family:'Share Tech Mono',monospace;font-size:0.44rem;letter-spacing:1px;padding:2px 5px;background:rgba(0,0,0,0.85);border:1px solid rgba(245,197,24,0.6);border-radius:2px;color:#f5c518;text-transform:uppercase;}
+        .poster-type{position:absolute;top:5px;left:5px;font-family:'Share Tech Mono',monospace;font-size:0.44rem;letter-spacing:1px;padding:2px 5px;background:rgba(0,0,0,0.82);border:1px solid rgba(245,197,24,0.3);border-radius:2px;color:rgba(245,197,24,0.8);text-transform:uppercase;}
+        .poster-no-img{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2rem;color:rgba(245,197,24,0.15);}
+        .poster-info{padding:6px 8px 8px;}
+        .poster-title{font-family:'Exo 2',sans-serif;font-size:0.72rem;font-weight:600;color:#f5c518;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+        .poster-meta{font-family:'Share Tech Mono',monospace;font-size:0.5rem;color:var(--dim);margin-top:4px;line-height:1.5;}
+        .poster-year{color:rgba(245,197,24,0.6);}
+        /* shimmer for poster loading */
+        .poster-card.shim .poster-img-wrap::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(245,197,24,0.03) 25%,rgba(245,197,24,0.09) 50%,rgba(245,197,24,0.03) 75%);background-size:200% 100%;animation:sh 1.4s infinite;z-index:1;}
+
+        /* ── SOCIAL PROFILE PANEL ── */
+        /* Visual cards showing social profile avatars, handles, and bio snippets
+           for Instagram, Twitter/X, and LinkedIn. Avatars are fetched via
+           Unavatar.io which is a free, CORS-open avatar proxy service that
+           resolves profile images for major social platforms without auth.
+           Cards link directly to the profile page on each platform. */
+        .social-grid{display:grid;grid-template-columns:1fr;gap:8px;}
+        .social-card{position:relative;border-radius:3px;overflow:hidden;cursor:pointer;transition:all 0.25s;animation:cs 0.35s ease forwards;opacity:0;display:flex;align-items:center;gap:12px;padding:10px 12px;text-decoration:none;}
+        .social-card.sc-ig{border:1px solid rgba(225,48,108,0.22);background:rgba(225,48,108,0.04);}
+        .social-card.sc-twx{border:1px solid rgba(231,233,234,0.14);background:rgba(231,233,234,0.03);}
+        .social-card.sc-li{border:1px solid rgba(10,102,194,0.22);background:rgba(10,102,194,0.04);}
+        .social-card:hover{transform:translateX(3px);}
+        .social-card.sc-ig:hover{border-color:rgba(225,48,108,0.55);box-shadow:0 4px 18px rgba(225,48,108,0.12);}
+        .social-card.sc-twx:hover{border-color:rgba(231,233,234,0.4);box-shadow:0 4px 18px rgba(231,233,234,0.06);}
+        .social-card.sc-li:hover{border-color:rgba(10,102,194,0.5);box-shadow:0 4px 18px rgba(10,102,194,0.12);}
+        .sc-avatar{width:46px;height:46px;border-radius:50%;object-fit:cover;flex-shrink:0;background:rgba(255,255,255,0.06);border:2px solid rgba(255,255,255,0.08);}
+        .sc-avatar.sc-ig{border-color:rgba(225,48,108,0.35);}
+        .sc-avatar.sc-twx{border-color:rgba(231,233,234,0.2);}
+        .sc-avatar.sc-li{border-color:rgba(10,102,194,0.4);}
+        .sc-avatar-fallback{width:46px;height:46px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.2rem;}
+        .sc-body{flex:1;min-width:0;}
+        .sc-handle{font-family:'Share Tech Mono',monospace;font-size:0.72rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+        .sc-handle.sc-ig{color:#f77ab7;}
+        .sc-handle.sc-twx{color:#e7e9ea;}
+        .sc-handle.sc-li{color:#4da3f7;}
+        .sc-desc{font-family:'Exo 2',sans-serif;font-size:0.72rem;color:var(--text);opacity:0.75;line-height:1.4;margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+        .sc-platform{font-family:'Share Tech Mono',monospace;font-size:0.46rem;letter-spacing:1.5px;padding:2px 6px;border-radius:2px;margin-top:5px;display:inline-block;text-transform:uppercase;}
+        .sc-platform.sc-ig{color:#f77ab7;border:1px solid rgba(225,48,108,0.3);background:rgba(225,48,108,0.05);}
+        .sc-platform.sc-twx{color:#e7e9ea;border:1px solid rgba(231,233,234,0.18);background:rgba(231,233,234,0.03);}
+        .sc-platform.sc-li{color:#4da3f7;border:1px solid rgba(10,102,194,0.3);background:rgba(10,102,194,0.05);}
+        /* social tab styling */
+        .tab-btn.imdb-tab{color:rgba(245,197,24,0.6);}
+        .tab-btn.imdb-tab.active{color:#f5c518;border-bottom-color:#f5c518;}
+        .tab-btn.social-tab.active{color:#f77ab7;border-bottom-color:#f77ab7;}
+
+        /* ── CROSS-SOURCE SIGNAL REFINEMENT PANEL ──
+           Updated from YT-only to unified multi-source signal engine.
+           Now integrates signals from YouTube, IMDb titles, and social
+           platform data to cross-validate what's truly relevant. */
+        .yt-refine-panel{
+            display:none;
+            width:100%;
+            margin-bottom:12px;
+            border:1px solid rgba(255,68,68,0.2);
+            border-left:3px solid #ff4444;
+            border-radius:0 4px 4px 0;
+            background:rgba(255,68,68,0.03);
+            padding:9px 14px;
+            animation:cs 0.3s ease forwards;
+        }
+        .yt-refine-panel.show{display:block;}
+        .yt-refine-hdr{
+            font-family:'Orbitron',monospace;
+            font-size:0.5rem;
+            letter-spacing:3px;
+            color:#ff4444;
+            margin-bottom:7px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+        }
+        .yt-refine-hdr-note{
+            font-family:'Share Tech Mono',monospace;
+            font-size:0.48rem;
+            color:var(--dim);
+            letter-spacing:1px;
+        }
+        .yt-refine-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;}
+        .yt-refine-tag{
+            font-family:'Share Tech Mono',monospace;
+            font-size:0.54rem;
+            padding:2px 8px;
+            border:1px solid rgba(255,68,68,0.28);
+            border-radius:2px;
+            color:rgba(255,68,68,0.75);
+            background:rgba(255,68,68,0.04);
+            cursor:pointer;
+            transition:all 0.2s;
+            text-transform:lowercase;
+        }
+        .yt-refine-tag:hover{background:rgba(255,68,68,0.12);border-color:#ff4444;color:#fff;}
+        .yt-refine-tag.hi{border-color:rgba(255,68,68,0.55);color:#ff8888;background:rgba(255,68,68,0.08);}
+        /* Signal source origin tags shown inline in the refinement panel */
+        .yt-refine-tag.from-imdb{border-color:rgba(245,197,24,0.35);color:rgba(245,197,24,0.8);background:rgba(245,197,24,0.05);}
+        .yt-refine-tag.from-imdb:hover{border-color:#f5c518;color:#f5c518;}
+        .yt-refine-tag.from-social{border-color:rgba(225,48,108,0.3);color:rgba(247,122,183,0.8);background:rgba(225,48,108,0.04);}
+        .yt-refine-tag.from-social:hover{border-color:#f77ab7;color:#f77ab7;}
+
+        @media(max-width:520px){.hud-r,.pfx{display:none}.logo-main{font-size:2.4rem}}
+    </style>
+</head>
+<body>
+<canvas id="sc"></canvas>
+<div class="cnr tl"></div><div class="cnr br"></div>
+
+<!-- LIGHTBOX (for image panel) -->
+<div class="lb" id="lb">
+    <div class="lb-x" id="lb-x">✕</div>
+    <img class="lb-img" id="lb-img" src="" alt="">
+    <div class="lb-meta" id="lb-meta"></div>
+    <div class="lb-nav">
+        <button onclick="lbNav(-1)">◀ PREV</button>
+        <button onclick="lbNav(1)">NEXT ▶</button>
+    </div>
+</div>
+
+<!-- YOUTUBE PREVIEW OVERLAY
+     Tapping a video thumbnail opens this overlay so the user can watch
+     the embedded video without leaving the Dart Alley search page.
+     The "Watch on YouTube" button below the player navigates to the
+     actual YouTube video page in a new tab. Pressing Escape or clicking
+     outside the player frame closes the overlay and stops playback. -->
+<div id="yt-overlay">
+    <div class="yt-ov-close" id="yt-ov-close" title="Close preview (Esc)">✕</div>
+
+    <div class="yt-ov-top-bar">
+        <div class="yt-ov-label">VIDEO PREVIEW — DART ALLEY</div>
+        <div class="yt-ov-esc-hint">ESC TO CLOSE &nbsp;·&nbsp; TAP OUTSIDE PLAYER</div>
+    </div>
+
+    <div class="yt-ov-frame-wrap" id="yt-ov-frame-wrap">
+        <!-- iframe is injected dynamically when overlay opens to avoid pre-loading -->
+    </div>
+
+    <div class="yt-ov-bottom">
+        <div class="yt-ov-text">
+            <div class="yt-ov-title" id="yt-ov-title"></div>
+            <div class="yt-ov-channel" id="yt-ov-channel"></div>
+        </div>
+        <!-- This is the direct link to the YouTube video page.
+             The user clicks this if they want to leave the search page
+             and go to YouTube directly, e.g. to see comments, subscribe, etc. -->
+        <a class="yt-ov-goto" id="yt-ov-goto" href="#" target="_blank" rel="noopener">
+            <span class="yt-ov-goto-icon">▶</span>
+            WATCH ON YOUTUBE
+        </a>
+    </div>
+</div>
+
+<div class="app">
+    <div class="hud">
+        <div class="hud-l">
+            <div class="ind"><div class="dot g"></div>SYS ONLINE</div>
+            <div class="ind"><div class="dot o"></div>MULTI-SOURCE LIVE</div>
+        </div>
+        <div class="hud-r"><span id="htime">--:--:-- UTC</span></div>
+    </div>
+
+    <div class="logo">
+        <div class="logo-eye">DART MEADOW AEROSPACE</div>
+        <div class="logo-main">DART ALLEY</div>
+        <div class="logo-sub">Neural Search Engine</div>
+        <div class="logo-line"></div>
+        <div class="badges">
+            <div class="badge orng"><span class="bdot"></span>DART PRIORITY</div>
+            <div class="badge" id="b-local"><span class="bdot"></span>LOCAL INDEX</div>
+            <div class="badge" id="b-wiki"><span class="bdot"></span>WIKIPEDIA</div>
+            <div class="badge" id="b-srx"><span class="bdot"></span>WEB SEARCH</div>
+            <div class="badge" id="b-img"><span class="bdot"></span>IMAGE SCAN</div>
+            <div class="badge" id="b-dom"><span class="bdot"></span>DOMAIN NET</div>
+            <div class="badge" id="b-yt"><span class="bdot"></span>YOUTUBE</div>
+            <div class="badge" id="b-imdb"><span class="bdot"></span>IMDB</div>
+            <div class="badge" id="b-li"><span class="bdot"></span>LINKEDIN</div>
+            <div class="badge" id="b-ig"><span class="bdot"></span>INSTAGRAM</div>
+            <div class="badge" id="b-twx"><span class="bdot"></span>TWITTER/X</div>
+        </div>
+    </div>
+
+    <div class="sw">
+        <div class="sf">
+            <div class="si">
+                <span class="pfx">&gt;_</span>
+                <input type="text" id="qi" placeholder="search anything across the Meadow..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                <button class="bscan" id="sbtn" onclick="doSearch()">SCAN</button>
+            </div>
+            <!-- SEARCH HISTORY DROPDOWN -->
+            <div class="sh-drop" id="shDrop">
+                <div class="sh-hdr">◈ SEARCH HISTORY <span class="sh-hdr-clear" id="shClearAll">✕ CLEAR ALL</span></div>
+                <div id="shList"></div>
+            </div>
+        </div>
+        <div class="frow">
+            <button class="ft on-o" id="f-prio"  onclick="tF('prio', this)">◈ DART DOMAINS</button>
+            <button class="ft on-c" id="f-local" onclick="tF('local',this)">◉ LOCAL DB</button>
+            <button class="ft on-c" id="f-wiki"  onclick="tF('wiki', this)">◉ WIKIPEDIA</button>
+            <button class="ft on-c" id="f-srx"   onclick="tF('srx',  this)">◉ WEB SEARCH</button>
+            <button class="ft on-p" id="f-img"   onclick="tF('img',  this)">◈ IMAGE SCAN</button>
+            <button class="ft on-g" id="f-dom"   onclick="tF('dom',  this)">◈ DOMAIN NET</button>
+            <button class="ft on-r" id="f-yt"    onclick="tF('yt',   this)">▶ YOUTUBE</button>
+            <button class="ft on-imdb" id="f-imdb" onclick="tF('imdb', this)">★ IMDB</button>
+            <button class="ft on-li"   id="f-li"   onclick="tF('li',   this)">in LINKEDIN</button>
+            <button class="ft on-ig"   id="f-ig"   onclick="tF('ig',   this)">◎ INSTAGRAM</button>
+            <button class="ft on-twx"  id="f-twx"  onclick="tF('twx',  this)">✕ TWITTER/X</button>
+        </div>
+        <div class="sbar" id="sbar"></div>
+        <div class="intel-panel" id="intelPanel">
+            <div class="intel-hdr">◈ NEURAL SIGNAL PROFILE <span id="intelForget" onclick="forgetTopic()">✕ FORGET TOPIC</span></div>
+            <div class="intel-row">
+                <div class="intel-col">
+                    <div class="intel-label">▸ LEARNED KEYWORDS</div>
+                    <div class="intel-tags" id="intelKeywords"></div>
+                </div>
+                <div class="intel-col">
+                    <div class="intel-label">▸ TRUSTED DOMAINS</div>
+                    <div class="intel-tags" id="intelDomains"></div>
+                </div>
+                <div class="intel-col">
+                    <div class="intel-label">▸ PREFERRED SOURCES</div>
+                    <div class="intel-tags" id="intelSources"></div>
+                </div>
+            </div>
+            <div class="intel-stats" id="intelStats"></div>
+        </div>
+
+    <!-- IFRAME / RESTRICTED CONTEXT WARNING -->
+    <div class="iframe-warn" id="iframeWarn">
+        <div class="iw-title">⚠ RESTRICTED NETWORK CONTEXT DETECTED</div>
+        External API calls are blocked in this environment (Claude preview / sandboxed iframe).<br>
+        Download the file and open it from your local server to enable live search.<br>
+        <div class="iw-dim">→ Open: <strong>localhost:7700/dartalley.html</strong> in your browser directly</div>
+    </div>
+
+    <div class="lw" id="lw">
+        <div class="radar"></div>
+        <div class="ltxt" id="ltxt">SCANNING...</div>
+    </div>
+
+    <div class="rw" id="rw">
+        <div class="ri">
+            <!-- WEB PANEL -->
+            <div>
+                <div class="ph">
+                    <div class="pl">// SIGNAL CAPTURE //</div>
+                    <div class="pm"><b id="rc">0</b> PATHWAYS</div>
+                </div>
+                <!-- YT SIGNAL REFINEMENT PANEL
+                     Injected here after YouTube results arrive and are analysed.
+                     Shows extracted keyword signals from YT top results so the user
+                     can see what terms YouTube's algorithm matched to their query,
+                     and can click any term to trigger a refined search. -->
+                <div class="yt-refine-panel" id="ytRefinePanel">
+                    <div class="yt-refine-hdr">
+                        ◈ CROSS-SOURCE SIGNAL REFINEMENT — YT · IMDB · SOCIAL
+                        <span class="yt-refine-hdr-note" id="ytRefineNote"></span>
+                    </div>
+                    <div class="yt-refine-tags" id="ytRefineTags"></div>
+                </div>
+                <div class="rg" id="rg"></div>
+            </div>
+            <!-- TABBED MEDIA PANEL -->
+            <div id="mediaOuter" style="display:none;">
+                <div class="tab-bar">
+                    <button class="tab-btn yt active" id="tab-yt" onclick="switchTab('yt')">▶ VIDEO<span class="tab-count" id="vc-count">0</span></button>
+                    <button class="tab-btn" id="tab-img" onclick="switchTab('img')">◈ IMAGES<span class="tab-count" id="ic">0</span></button>
+                    <button class="tab-btn imdb-tab" id="tab-imdb" onclick="switchTab('imdb')" style="display:none;">★ IMDB<span class="tab-count" id="imdb-count">0</span></button>
+                    <button class="tab-btn social-tab" id="tab-social" onclick="switchTab('social')" style="display:none;">◎ SOCIAL<span class="tab-count" id="social-count">0</span></button>
+                </div>
+                <!-- VIDEO PANEL -->
+                <div class="media-panel active" id="vidP">
+                    <div class="vg" id="vg"></div>
+                    <div class="img-src-note" style="margin-top:8px;">SOURCE: <span>YOUTUBE</span></div>
+                </div>
+                <!-- IMAGE PANEL -->
+                <div class="media-panel" id="imgP">
+                    <div class="ig" id="ig"></div>
+                    <div class="img-src-note" style="margin-top:8px;">SOURCE: <span>WIKIPEDIA · WIKIMEDIA</span></div>
+                    <div class="more-btn" id="moreBtn" onclick="loadMore()">▼ LOAD MORE</div>
+                </div>
+                <!-- IMDB POSTER PANEL -->
+                <!-- Visual grid of movie/show poster images fetched from OMDb API.
+                     Each card shows the poster thumbnail, title, year, type (movie/series/episode),
+                     and IMDb rating. Clicking opens the full IMDb page for that title.
+                     Posters are lazy-loaded via IntersectionObserver. Titles without posters
+                     show a ★ placeholder. -->
+                <div class="media-panel" id="imdbP">
+                    <div class="poster-grid" id="posterGrid"></div>
+                    <div class="img-src-note" style="margin-top:8px;">SOURCE: <span>IMDB · OMDb</span></div>
+                </div>
+                <!-- SOCIAL PROFILE PANEL -->
+                <!-- Visual profile cards for Instagram, Twitter/X, and LinkedIn.
+                     Each card shows a profile avatar (fetched via Unavatar.io — a free,
+                     CORS-open avatar CDN), the handle/name, platform badge, and a short
+                     description or bio if available. Clicking the card navigates directly
+                     to that profile page on the respective platform. -->
+                <div class="media-panel" id="socialP">
+                    <div class="social-grid" id="socialGrid"></div>
+                    <div class="img-src-note" style="margin-top:8px;">SOURCE: <span>INSTAGRAM · TWITTER/X · LINKEDIN</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">DART ALLEY &nbsp;|&nbsp; <span>DART MEADOW AEROSPACE</span> &nbsp;|&nbsp; DDG · HN · REDDIT · GDELT · GITHUB · YOUTUBE · WIKIPEDIA · WIKIMEDIA · WIKIDATA · IMDB · LINKEDIN · INSTAGRAM · TWITTER/X · LOCAL</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  DART ALLEY — Neural Multi-Source Search Engine
+//  Web:    DDG · HN · Reddit · GDELT · Wiki ExtLinks · GitHub (parallel, CORS-open)
+//  Images: Wikipedia + Wikimedia Commons
+//  Video:  YouTube Data API v3 with in-page preview overlay
+//  Domains: Wikidata P856 + favicon probing
+//  IMDb:   IMDb Suggestion API (film, TV, talent — CORS open, no key)
+//  LinkedIn: DDG site:linkedin.com + direct deep-link construction
+//  Instagram: DDG site:instagram.com + profile/hashtag deep-links
+//  Twitter/X: DDG site:twitter.com + X.com search deep-links
+//  NLE:    Neural Learning Engine — behavioral relevance (localStorage)
+//  YT-Refine: YouTube signal cross-source relevance injection
+//  Errors: All network failures silent via AbortController
+// ═══════════════════════════════════════════════════════════
+
+// ── STARFIELD ─────────────────────────────────────────
+(function(){
+    const cv=document.getElementById('sc'),cx=cv.getContext('2d');let st=[];
+    const rsz=()=>{cv.width=innerWidth;cv.height=innerHeight;};
+    const init=()=>{st=[];for(let i=0;i<200;i++)st.push({x:Math.random()*cv.width,y:Math.random()*cv.height,r:Math.random()*1.4+0.2,a:Math.random(),spd:Math.random()*0.25+0.04,dr:(Math.random()-0.5)*0.07});};
+    const draw=()=>{cx.clearRect(0,0,cv.width,cv.height);st.forEach(s=>{cx.beginPath();cx.arc(s.x,s.y,s.r,0,Math.PI*2);cx.fillStyle=`rgba(200,225,255,${s.a})`;cx.fill();s.a+=(Math.random()-0.5)*0.016;s.a=Math.max(0.04,Math.min(1,s.a));s.x+=s.dr;s.y-=s.spd;if(s.y<-2){s.y=cv.height+2;s.x=Math.random()*cv.width;}});requestAnimationFrame(draw);};
+    window.addEventListener('resize',()=>{rsz();init();});rsz();init();draw();
+})();
+
+// ── CLOCK ─────────────────────────────────────────────
+setInterval(()=>{document.getElementById('htime').textContent=new Date().toUTCString().split(' ')[4]+' UTC';},1000);
+
+// ── IFRAME / SANDBOX DETECTION ────────────────────────
+(function(){
+    const isIframe = window.self !== window.top;
+    const isRestricted = isIframe || window.location.protocol === 'blob:' || window.location.href.includes('claude.ai');
+    if(isRestricted){
+        document.getElementById('iframeWarn').style.display = 'block';
+        console.warn('[DART] Running in restricted context — external fetches will be blocked. Use localhost directly.');
+    }
+})();
+const F={prio:true,local:true,wiki:true,srx:true,img:true,dom:true,yt:true,imdb:true,li:true,ig:true,twx:true};
+const DART=['dartmeadow.com','radicaldeepscale.com','drymeadow.com'];
+let DB=[], allImgs=[], imgPage=0;
+const IPP=12;
+const stats={};
+
+function tF(k,btn){
+    F[k]=!F[k];
+    const cls=k==='prio'?'on-o':k==='img'?'on-p':k==='dom'?'on-g':k==='yt'?'on-r':k==='imdb'?'on-imdb':k==='li'?'on-li':k==='ig'?'on-ig':k==='twx'?'on-twx':'on-c';
+    btn.classList.toggle(cls,F[k]);
+}
+function setBadge(id,cls='cyan'){const b=document.getElementById(id);if(b){b.classList.add(cls);}}
+function setStat(k,cls,msg){stats[k]={cls,msg};document.getElementById('sbar').innerHTML=Object.values(stats).map(s=>`<div class="s2 ${s.cls}">${s.msg}</div>`).join('');}
+
+// ── LOAD LOCAL DB ─────────────────────────────────────
+fetch('database.json')
+    .then(r=>{if(!r.ok)throw new Error(r.status);return r.json();})
+    .then(d=>{DB=Array.isArray(d)?d:[];setBadge('b-local');setStat('local','ok','LOCAL: '+DB.length);})
+    .catch(()=>setStat('local','warn','LOCAL: unavailable'));
+
+// ── DOM ───────────────────────────────────────────────
+const qi=document.getElementById('qi'),lw=document.getElementById('lw'),
+      ltxt=document.getElementById('ltxt'),rw=document.getElementById('rw'),
+      rg=document.getElementById('rg'),rc=document.getElementById('rc'),
+      ig=document.getElementById('ig'),ic=document.getElementById('ic'),
+      sbtn=document.getElementById('sbtn'),
+      imgP=document.getElementById('imgP'),
+      mediaOuter=document.getElementById('mediaOuter'),
+      moreBtn=document.getElementById('moreBtn');
+
+qi.addEventListener('keypress',e=>{if(e.key==='Enter')doSearch();});
+
+// ── SEARCH HISTORY ENGINE ──────────────────────────────
+// Stores up to 80 past queries in localStorage, shows a styled
+// dropdown with autocomplete as the user types, and supports
+// keyboard navigation (↑ ↓ Enter Escape Tab).
+
+const SH = (function(){
+    const KEY = 'dart_search_history';
+    const MAX  = 80;
+
+    // ── Persistence helpers ──────────────────────────────
+    function load(){
+        try{ return JSON.parse(localStorage.getItem(KEY)||'[]'); }
+        catch(e){ return []; }
+    }
+    function save(arr){
+        try{ localStorage.setItem(KEY, JSON.stringify(arr)); }
+        catch(e){}
+    }
+
+    // ── Add a query to history (dedup, most-recent-first) ─
+    function add(q){
+        if(!q||!q.trim()) return;
+        const clean = q.trim();
+        let arr = load().filter(s => s.toLowerCase() !== clean.toLowerCase());
+        arr.unshift(clean);
+        if(arr.length > MAX) arr = arr.slice(0, MAX);
+        save(arr);
+    }
+
+    // ── Remove one entry ─────────────────────────────────
+    function remove(q){
+        save(load().filter(s => s !== q));
+    }
+
+    // ── Clear all ────────────────────────────────────────
+    function clear(){
+        save([]);
+    }
+
+    // ── Filter history by current input ──────────────────
+    function match(input){
+        if(!input || !input.trim()) return load().slice(0, 12);
+        const lc = input.trim().toLowerCase();
+        return load().filter(s => s.toLowerCase().includes(lc)).slice(0, 12);
+    }
+
+    // ── Highlight matching portion of a string ────────────
+    function highlight(str, query){
+        if(!query || !query.trim()) return escHtml(str);
+        const lc  = str.toLowerCase();
+        const q   = query.trim().toLowerCase();
+        const idx = lc.indexOf(q);
+        if(idx < 0) return escHtml(str);
+        return escHtml(str.slice(0, idx)) +
+               '<em>' + escHtml(str.slice(idx, idx + q.length)) + '</em>' +
+               escHtml(str.slice(idx + q.length));
+    }
+
+    function escHtml(s){
+        return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    return { add, remove, clear, match, highlight, load };
+})();
+
+// ── Dropdown DOM refs ──────────────────────────────────
+const shDrop     = document.getElementById('shDrop');
+const shList     = document.getElementById('shList');
+const shClearAll = document.getElementById('shClearAll');
+let shFocusIdx   = -1;   // keyboard-focused item index
+let shItems      = [];   // currently rendered items
+
+// ── Build & show the dropdown ──────────────────────────
+function shShow(){
+    const val     = qi.value;
+    const matches = SH.match(val);
+    shItems       = matches;
+    shFocusIdx    = -1;
+
+    if(matches.length === 0){
+        shList.innerHTML = '<div class="sh-empty">NO HISTORY YET</div>';
+    } else {
+        shList.innerHTML = matches.map((q, i) =>
+            `<div class="sh-item" data-idx="${i}" data-query="${q.replace(/"/g,'&quot;')}">
+                <span class="sh-icon">◷</span>
+                <span class="sh-text">${SH.highlight(q, val)}</span>
+                <span class="sh-del" title="Remove" data-del="${q.replace(/"/g,'&quot;')}">✕</span>
+             </div>`
+        ).join('');
+
+        // Click to select a history item
+        shList.querySelectorAll('.sh-item').forEach(el => {
+            el.addEventListener('mousedown', e => {
+                // If the delete button was clicked, remove and refresh
+                if(e.target.classList.contains('sh-del')){
+                    e.preventDefault();
+                    SH.remove(e.target.getAttribute('data-del'));
+                    shShow();
+                    return;
+                }
+                e.preventDefault();
+                const q = el.getAttribute('data-query');
+                qi.value = q;
+                shHide();
+                doSearch();
+            });
+        });
+    }
+
+    shDrop.classList.add('open');
+}
+
+// ── Hide the dropdown ──────────────────────────────────
+function shHide(){
+    shDrop.classList.remove('open');
+    shFocusIdx = -1;
+}
+
+// ── Move keyboard focus within list ───────────────────
+function shMoveFocus(dir){
+    const els = shList.querySelectorAll('.sh-item');
+    if(!els.length) return;
+    els.forEach(e => e.classList.remove('focused'));
+    shFocusIdx = shFocusIdx + dir;
+    if(shFocusIdx < 0)          shFocusIdx = els.length - 1;
+    if(shFocusIdx >= els.length) shFocusIdx = 0;
+    els[shFocusIdx].classList.add('focused');
+    // Preview the query in the input field
+    qi.value = shItems[shFocusIdx];
+}
+
+// ── Input event: show/refresh dropdown ────────────────
+qi.addEventListener('input', () => {
+    shShow();
+});
+
+// ── Focus event: show dropdown when clicking into field ─
+qi.addEventListener('focus', () => {
+    shShow();
+});
+
+// ── Keyboard navigation ────────────────────────────────
+qi.addEventListener('keydown', e => {
+    if(!shDrop.classList.contains('open')) return;
+
+    if(e.key === 'ArrowDown'){
+        e.preventDefault();
+        shMoveFocus(1);
+    } else if(e.key === 'ArrowUp'){
+        e.preventDefault();
+        shMoveFocus(-1);
+    } else if(e.key === 'Escape'){
+        shHide();
+    } else if(e.key === 'Tab'){
+        // Tab completes to the focused item if one is focused
+        if(shFocusIdx >= 0 && shItems[shFocusIdx]){
+            e.preventDefault();
+            qi.value = shItems[shFocusIdx];
+            shHide();
+        } else {
+            shHide();
+        }
+    }
+    // Enter is handled by the existing keypress listener above,
+    // but we also close the dropdown here
+    if(e.key === 'Enter'){
+        shHide();
+    }
+});
+
+// ── Clear all button ───────────────────────────────────
+shClearAll.addEventListener('mousedown', e => {
+    e.preventDefault();
+    SH.clear();
+    shShow();
+});
+
+// ── Hide dropdown when clicking outside ───────────────
+document.addEventListener('mousedown', e => {
+    if(!e.target.closest('.sf')){
+        shHide();
+    }
+});
+
+
+// ═══════════════════════════════════════════════════════════
+//  DART SAFE — Content Safety Filter
+//  Three-layer protection:
+//   Layer 1: Query gate  — blocks the entire search before any
+//            API call fires if the query matches adult/gore terms.
+//   Layer 2: Result filter — strips individual result cards that
+//            match blocked terms or come from blocked domains.
+//   Layer 3: Video filter — strips video results by title/channel.
+//  Word-boundary regex prevents false positives on legitimate
+//  searches (e.g. "sex education", "nudist colony history",
+//  "graphic novel", "execution of will", "strip mining").
+// ═══════════════════════════════════════════════════════════
+
+const SAFE = (() => {
+
+    // ── LAYER 1: Query-level block patterns ───────────────
+    // Any query matching these halts the entire search.
+    const Q_BLOCK = [
+        /\bporn(o|ography|hub|star|stars|site|film|films|video|videos)?\b/i,
+        /\bxxx\b/i,
+        /\bx-rated\b/i,
+        /\bnude(s|ity|ist\s+video|ist\s+photo|ist\s+film)?\b/i,
+        /\bnaked\s+(women|men|girls|boys|teen|teens|celebr)\b/i,
+        /\bnsfw\b/i,
+        /\bsex\s+(tape|video|videos|clip|clips|scene|scenes|act|acts)\b/i,
+        /\bsexual\s+(content|video|act|explicit)\b/i,
+        /\berotic(a|ally|film|video)?\b/i,
+        /\bhentai\b/i,
+        /\blive\s+sex\b/i,
+        /\bfetish\s+(video|porn|sex)\b/i,
+        /\bondage\s+(video|porn|sex|clip)\b/i,
+        /\bbdsm\b/i,
+        /\bescort\s+(service|ad|listing)\b/i,
+        /\bonlyfans\s+(leak|free|content)\b/i,
+        /\bcamgirl\b/i,
+        /\bchaturbate\b/i,
+        /\bleaked\s+(nude|sex|naked|intimate)\b/i,
+        /\bnude\s+(leak|photo|pic|video)\b/i,
+        /\b(creampie|gangbang|threesome\s+sex|orgy\s+video|milf\s+porn|dildo|vibrator|masturbat)\b/i,
+        /\bincest\b/i,
+        /\bchild\s+(porn|nude|naked|sex|sexual)\b/i,
+        /\bunderage\s+(sex|nude|naked|porn|photo)\b/i,
+        /\b(cp\s+porn|lolicon|shotacon|jailbait)\b/i,
+        // Gore / death / shock content
+        /\bbeheading\s+(video|footage|clip)\b/i,
+        /\bgorezone\b/i,
+        /\bliveleak\b/i,
+        /\bbestgore\b/i,
+        /\bgoregrish\b/i,
+        /\bgore\s+(video|footage|clip|site)\b/i,
+        /\bsnuff\s+film\b/i,
+        /\breach\s+death\s+video\b/i,
+        /\btorture\s+(video|footage|clip)\b/i,
+        /\bgraphic\s+(murder|killing|death|violence)\s+video\b/i,
+        /\bexecution\s+(video|footage|clip|recording)\b/i,
+        /\bsuicide\s+(video|footage|livestream|how\s+to)\b/i,
+        /\bself.?harm\s+(how|method|way|tip)\b/i,
+    ];
+
+    // ── LAYER 2: Blocked domains (any result from these is hidden) ─
+    const BLOCK_DOMAINS = new Set([
+        // Adult platforms
+        'pornhub.com','xvideos.com','xnxx.com','xhamster.com',
+        'redtube.com','youporn.com','tube8.com','spankbang.com',
+        'brazzers.com','bangbros.com','naughtyamerica.com',
+        'onlyfans.com','fansly.com','manyvids.com','loyalfans.com',
+        'chaturbate.com','myfreecams.com','cam4.com','stripchat.com',
+        'bongacams.com','livejasmin.com','jasmin.com',
+        'rule34.xxx','rule34.paheal.net','e621.net','gelbooru.com',
+        'danbooru.donmai.us','sankakucomplex.com','nhentai.net',
+        'hentaihaven.xxx','hanime.tv','fakku.net','hitomi.la',
+        'porntrex.com','tnaflix.com','slutload.com','drtuber.com',
+        'hdtube.xxx','4tube.com','fux.com','fuq.com','thumbzilla.com',
+        'empflix.com','porndig.com','vporn.com','hclips.com',
+        'txxx.com','upornia.com','ixxx.com','iceporn.com',
+        // Gore / shock sites
+        'liveleak.com','bestgore.com','goregrish.com','rotten.com',
+        'theync.com','kaotic.com','ogrish.com','efukt.com',
+        'crazyshit.com','hoodsite.com','documentspeopledigital.com',
+        'watchpeopledi.com','thisvid.com',
+    ]);
+
+    // ── LAYER 3: Result/video title/desc filter terms ─────
+    // Applied to individual result items. More targeted than query
+    // block — only trips on clearly adult/gore phrasing, not on
+    // educational or neutral use of sensitive words.
+    const R_BLOCK = [
+        /\bporn(o|ography|hub|star)?\b/i,
+        /\bxxx\b/i,
+        /\bnudity\b/i,
+        /\bnsfw\b/i,
+        /\berotic(a)?\b/i,
+        /\bhentai\b/i,
+        /\bonlyfans\b/i,
+        /\bchaturbate\b/i,
+        /\bbestgore\b/i,
+        /\bgoregrish\b/i,
+        /\bbeheading\b/i,
+        /\bsnuff\s+film\b/i,
+        /\bgore\s+video\b/i,
+        /\bexecution\s+video\b/i,
+        /\bdeath\s+footage\b/i,
+    ];
+
+    function domainOf(url){
+        try{ return new URL(url).hostname.replace(/^www\./,'').toLowerCase(); }
+        catch(e){ return ''; }
+    }
+
+    function isBlockedDomain(url){ return BLOCK_DOMAINS.has(domainOf(url)); }
+
+    // Layer 1 — returns true if the whole query should be blocked
+    function blockQuery(q){
+        return Q_BLOCK.some(p => p.test(q.trim()));
+    }
+
+    // Layer 2+3 — returns true if an individual result should be hidden
+    function blockResult(item){
+        const url  = item.url||'';
+        if(isBlockedDomain(url)) return true;
+        const text = ((item.title||'')+' '+(item.desc||'')+' '+url).toLowerCase();
+        return R_BLOCK.some(p => p.test(text));
+    }
+
+    // Filter a results array
+    function filterResults(items){
+        return (items||[]).filter(item => !blockResult(item));
+    }
+
+    // Filter video array (same logic, different field names)
+    function filterVideos(videos){
+        return (videos||[]).filter(v => {
+            if(isBlockedDomain(v.url||'')) return false;
+            const text = ((v.title||'')+' '+(v.channel||'')).toLowerCase();
+            return !R_BLOCK.some(p => p.test(text));
+        });
+    }
+
+    // Filter image array — strip any image whose source URL is a blocked domain
+    function filterImages(imgs){
+        return (imgs||[]).filter(img => {
+            if(isBlockedDomain(img.link||'')) return false;
+            if(isBlockedDomain(img.thumb||'')) return false;
+            return true;
+        });
+    }
+
+    return { blockQuery, blockResult, filterResults, filterVideos, filterImages };
+})();
+
+async function doSearch(){
+    const q=qi.value.trim();if(!q)return;
+
+    // ── SAFE Layer 1: halt entire search on blocked query ─
+    if(SAFE.blockQuery(q)){
+        lw.style.display='none';
+        rw.style.display='none';
+        sbtn.disabled=false;
+        rg.innerHTML='';
+        rw.style.display='block';
+        rg.innerHTML=`<div class="nr">
+            <div class="nr-code" style="color:var(--orange);font-size:2rem;">⚠</div>
+            <div class="nr-msg" style="color:var(--orange);">CONTENT BLOCKED — SAFE SEARCH ACTIVE</div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--dim);margin-top:10px;letter-spacing:1px;">This search engine filters adult and harmful content.</div>
+        </div>`;
+        setStat('safe','warn','SAFE: query blocked');
+        return;
+    }
+    SH.add(q);        // ← save to search history for autocomplete dropdown
+    NLE.onSearch(q);  // ← record search intent
+    sbtn.disabled=true;
+    rg.innerHTML='';ig.innerHTML='';allImgs=[];imgPage=0;
+    document.getElementById('vg').innerHTML='';
+    document.getElementById('posterGrid').innerHTML='';
+    document.getElementById('socialGrid').innerHTML='';
+    document.getElementById('mediaOuter').style.display='none';
+    // Reset all tab buttons and panels to default state
+    ['yt','img','imdb','social'].forEach(t=>{
+        const btn=document.getElementById('tab-'+t);
+        const panels={yt:'vidP',img:'imgP',imdb:'imdbP',social:'socialP'};
+        const pnl=document.getElementById(panels[t]);
+        if(btn){ btn.classList.remove('active'); if(t!=='yt')btn.style.display='none'; }
+        if(pnl) pnl.classList.remove('active');
+    });
+    document.getElementById('tab-yt').classList.add('active');
+    document.getElementById('tab-yt').style.display='';
+    document.getElementById('tab-img').style.display='';
+    document.getElementById('vidP').classList.add('active');
+    rw.style.display='none';moreBtn.style.display='none';
+    lw.style.display='flex';ltxt.textContent='INITIALIZING SCAN...';
+
+    // Reset unified multi-source signal state for this new search
+    // Now collects signals from YouTube, IMDb, AND social platforms
+    unifiedSignals = { keywords:{}, topTerms:[], sources:{} };
+    // Reset social card deduplication set for new search
+    _renderedSocialUrls = new Set();
+    const ytRefinePanel = document.getElementById('ytRefinePanel');
+    if(ytRefinePanel){ ytRefinePanel.classList.remove('show'); }
+
+    // Show intelligence panel if we have prior learning on this topic
+    renderIntelPanel(q);
+
+    const all=[];
+
+    // 1. DART priority local
+    if(F.prio&&DB.length){
+        const ql=q.toLowerCase();
+        DB.filter(i=>DART.some(d=>(i.url||'').toLowerCase().includes(d))&&hit(i,ql))
+          .forEach(h=>all.push({...h,_s:'prio'}));
+    }
+    // 2. Local non-DART
+    if(F.local&&DB.length){
+        const ql=q.toLowerCase();
+        DB.filter(i=>!DART.some(d=>(i.url||'').toLowerCase().includes(d))&&hit(i,ql))
+          .forEach(h=>all.push({...h,_s:'local'}));
+    }
+    // 3. Wikipedia text search
+    if(F.wiki){
+        ltxt.textContent='QUERYING WIKIPEDIA...';
+        try{
+            const wr=await wikiSearch(q);
+            wr.forEach(r=>all.push({...r,_s:'wiki'}));
+            setBadge('b-wiki');setStat('wiki','ok','WIKI: '+wr.length);
+        }catch(e){setStat('wiki','warn','WIKI: timeout');}
+    }
+    // 4. Searx web search (JSON API, no proxy needed)
+    if(F.srx){
+        ltxt.textContent='SCANNING WEB — DDG · HN · REDDIT · GDELT...';
+        try{
+            const sr=await searxSearch(q);
+            sr.forEach(r=>all.push({...r,_s:'srx'}));
+            setBadge('b-srx');setStat('srx','ok','WEB: '+sr.length);
+        }catch(e){
+            setStat('srx','warn','WEB: '+e.message.slice(0,32));
+            console.warn('[DART] searx:',e.message);
+        }
+    }
+
+    // Deduplicate
+    const seen=new Set();
+    let final=all.filter(r=>{const k=(r.url||r.title||'').toLowerCase();if(seen.has(k))return false;seen.add(k);return true;});
+
+    // ── SAFE Layer 2: strip blocked result items ──────────
+    final = SAFE.filterResults(final);
+
+    // ── NLE: Re-rank results using learned model ──
+    final = NLE.rankResults(q, final);
+    // Track skip penalties from this impression
+    NLE.applySkipPenalties(q, final);
+    // Record impressions so skips can be detected on future searches
+    NLE.onImpression(q, final);
+
+    // 5. Images (parallel, non-blocking)
+    if(F.img){ltxt.textContent='SCANNING IMAGES...';searchImages(q).catch(()=>{});}
+
+    // 6. Domain network discovery (parallel, non-blocking)
+    if(F.dom){searchDomains(q,final).catch(()=>{});}
+
+    // 7. YouTube video results (parallel, non-blocking).
+    //    After YouTube results arrive, the YT signal engine extracts top terms
+    //    from video titles/channels and uses them to re-score the already-rendered
+    //    web results from Wikipedia, DDG, Reddit, GDELT, GitHub, etc., boosting
+    //    results that align with what YouTube's algorithm determined is most
+    //    relevant to this exact query intent.
+    if(F.yt){searchYouTube(q).catch(()=>{});}
+
+    // 8. IMDb search (parallel, non-blocking) — films, shows, actors, crew
+    if(F.imdb){searchIMDb(q).catch(()=>{});}
+
+    // 9. LinkedIn search (parallel, non-blocking) — people, companies, jobs
+    if(F.li){searchLinkedIn(q).catch(()=>{});}
+
+    // 10. Instagram search (parallel, non-blocking) — profiles via DDG site: filter
+    if(F.ig){searchInstagram(q).catch(()=>{});}
+
+    // 11. Twitter/X search (parallel, non-blocking) — tweets, profiles, trends
+    if(F.twx){searchTwitterX(q).catch(()=>{});}
+
+    lw.style.display='none';sbtn.disabled=false;
+    renderWeb(final,q);
+    rw.style.display='block';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  NEURAL LEARNING ENGINE — Behavioral Relevance Intelligence
+//  Tracks clicks, dwell time, repeated searches, skip patterns.
+//  Builds a personal signal model per topic that persists in
+//  localStorage and reshapes every future search in real-time.
+// ═══════════════════════════════════════════════════════════
+
+const NLE = (() => {
+    const STORE_KEY = 'dart_nle_v1';
+    const MAX_TOPICS = 120;
+    const DECAY = 0.92;       // score decay per day of inactivity
+    const CLICK_W = 3.0;      // weight: clicked a result
+    const DWELL_W = 0.8;      // weight per 10s of dwell time
+    const SKIP_W  = -0.6;     // weight: result shown but never clicked (after 3+ ignores)
+    const REPEAT_W = 1.5;     // weight: searched same topic again
+    const SEED_W  = 2.0;      // weight: manually promoted keyword
+
+    let model = {};  // { topicKey: { keywords:{}, domains:{}, sources:{}, skipped:Set, clicks:n, lastSeen:ts } }
+
+    function load(){
+        try{ model=JSON.parse(localStorage.getItem(STORE_KEY)||'{}'); }
+        catch(e){ model={}; }
+        // Convert skipped arrays back to Sets
+        Object.values(model).forEach(t=>{ t.skipped=new Set(t.skipped||[]); });
+    }
+
+    function save(){
+        const serializable={};
+        Object.entries(model).forEach(([k,t])=>{
+            serializable[k]={...t, skipped:[...t.skipped]};
+        });
+        try{ localStorage.setItem(STORE_KEY, JSON.stringify(serializable)); }
+        catch(e){ pruneOldTopics(); }
+    }
+
+    function topicKey(q){ return q.toLowerCase().trim().replace(/\s+/g,' '); }
+
+    function getOrCreate(q){
+        const k=topicKey(q);
+        if(!model[k]) model[k]={keywords:{},domains:{},sources:{},skipped:new Set(),clicks:0,impressions:0,lastSeen:Date.now(),searches:0};
+        return model[k];
+    }
+
+    function applyDecay(topic){
+        const daysSince=(Date.now()-topic.lastSeen)/(1000*60*60*24);
+        const factor=Math.pow(DECAY, daysSince);
+        Object.keys(topic.keywords).forEach(k=>{ topic.keywords[k]*=factor; if(topic.keywords[k]<0.05) delete topic.keywords[k]; });
+        Object.keys(topic.domains).forEach(k=>{ topic.domains[k]*=factor; if(topic.domains[k]<0.05) delete topic.domains[k]; });
+        Object.keys(topic.sources).forEach(k=>{ topic.sources[k]*=factor; });
+    }
+
+    function extractSignals(item){
+        const tokens=[];
+        const text=((item.title||'')+' '+(item.desc||'')).toLowerCase();
+        // Extract meaningful words (3+ chars, not stopwords)
+        const stops=new Set(['the','and','for','are','was','with','this','that','from','have','not','but','all','can','its','will','been','has','had','their','they','about','more','also','into','than','when','your','our','out','use','one','two','how','who','what','which','would','could','should','these','those','there','where','after','before','other','over','such','some','been','very','just','like','well','used','made','most','much','only','both','even','same','take','each','many','come','than','then','yet','now','may','per','via','new']);
+        text.match(/\b[a-z][a-z0-9]{2,}\b/g)?.forEach(w=>{ if(!stops.has(w)) tokens.push(w); });
+        const domain = getDom(item.url||'');
+        return { tokens, domain, source: item._s||'srx' };
+    }
+
+    // ── PUBLIC API ──────────────────────────────────────
+
+    // Call when a search is initiated
+    function onSearch(q){
+        const t=getOrCreate(q);
+        applyDecay(t);
+        t.searches=(t.searches||0)+1;
+        t.lastSeen=Date.now();
+        if(t.searches>1) Object.keys(t.keywords).forEach(k=>t.keywords[k]=(t.keywords[k]||0)+REPEAT_W*0.1);
+        save();
+    }
+
+    // Call when results are rendered (track impressions for skip detection)
+    function onImpression(q, items){
+        const t=getOrCreate(q);
+        t.impressions=(t.impressions||0)+items.length;
+        // After 3 searches on same topic, start tracking what was shown but not clicked
+        if(t.searches>=3){
+            items.forEach(item=>{
+                const k=(item.url||item.title||'').toLowerCase();
+                if(k) t.skipped.add(k);
+            });
+        }
+        save();
+    }
+
+    // Call when user clicks a result
+    function onClick(q, item){
+        const t=getOrCreate(q);
+        const {tokens,domain,source}=extractSignals(item);
+        // Boost clicked keywords
+        tokens.forEach(w=>{ t.keywords[w]=(t.keywords[w]||0)+CLICK_W; });
+        // Boost clicked domain
+        if(domain) t.domains[domain]=(t.domains[domain]||0)+CLICK_W;
+        // Boost source type
+        t.sources[source]=(t.sources[source]||0)+CLICK_W;
+        t.clicks=(t.clicks||0)+1;
+        // Remove from skipped since they did click it
+        const k=(item.url||item.title||'').toLowerCase();
+        t.skipped.delete(k);
+        save();
+    }
+
+    // Call when user dwells on a result (tab returned to, mouse hovered 5s+)
+    function onDwell(q, item, seconds){
+        if(seconds<5) return;
+        const t=getOrCreate(q);
+        const {tokens,domain,source}=extractSignals(item);
+        const weight=DWELL_W*(seconds/10);
+        tokens.forEach(w=>{ t.keywords[w]=(t.keywords[w]||0)+weight; });
+        if(domain) t.domains[domain]=(t.domains[domain]||0)+weight*0.5;
+        t.sources[source]=(t.sources[source]||0)+weight*0.3;
+        save();
+    }
+
+    // Apply skip penalties to consistently ignored results
+    function applySkipPenalties(q, shownItems){
+        const t=model[topicKey(q)];
+        if(!t||t.searches<3) return;
+        shownItems.forEach(item=>{
+            const k=(item.url||item.title||'').toLowerCase();
+            if(t.skipped.has(k)){
+                // Item shown again without being clicked — penalize its signals
+                const {tokens,domain}=extractSignals(item);
+                tokens.forEach(w=>{ if(t.keywords[w]) t.keywords[w]+=SKIP_W*0.2; });
+                if(domain&&t.domains[domain]) t.domains[domain]+=SKIP_W*0.3;
+            }
+        });
+        save();
+    }
+
+    // Score a result item 0–100+ for a given query
+    function scoreItem(q, item){
+        const t=model[topicKey(q)];
+        if(!t) return 50; // neutral for unknown topics
+        const {tokens,domain,source}=extractSignals(item);
+        let score=50;
+        // Keyword relevance
+        tokens.forEach(w=>{ score+=(t.keywords[w]||0)*1.2; });
+        // Domain trust
+        if(domain) score+=(t.domains[domain]||0)*2.5;
+        // Source preference
+        score+=(t.sources[source]||0)*1.0;
+        // Penalize skipped URLs
+        const k=(item.url||item.title||'').toLowerCase();
+        if(t.skipped.has(k)) score-=15;
+        return Math.max(0,score);
+    }
+
+    // Sort and filter results using learned model
+    function rankResults(q, items){
+        const t=model[topicKey(q)];
+        if(!t||t.clicks<2) return items; // not enough data yet, return as-is
+        return [...items].sort((a,b)=>scoreItem(q,b)-scoreItem(q,a));
+    }
+
+    // Get top learned keywords to seed related searches
+    function getSeedKeywords(q, limit=6){
+        const t=model[topicKey(q)];
+        if(!t) return [];
+        return Object.entries(t.keywords)
+            .filter(([w,s])=>s>1.5&&w.length>3)
+            .sort(([,a],[,b])=>b-a)
+            .slice(0,limit)
+            .map(([w])=>w);
+    }
+
+    // Get top trusted domains for a topic
+    function getTrustedDomains(q, limit=5){
+        const t=model[topicKey(q)];
+        if(!t) return [];
+        return Object.entries(t.domains)
+            .filter(([,s])=>s>2)
+            .sort(([,a],[,b])=>b-a)
+            .slice(0,limit)
+            .map(([d])=>d);
+    }
+
+    // Get topic intelligence summary
+    function getInsight(q){
+        const t=model[topicKey(q)];
+        if(!t||t.clicks<1) return null;
+        return {
+            searches: t.searches||0,
+            clicks: t.clicks||0,
+            topKeywords: getSeedKeywords(q,8),
+            topDomains: getTrustedDomains(q,4),
+            topSources: Object.entries(t.sources).sort(([,a],[,b])=>b-a).slice(0,3).map(([s])=>s)
+        };
+    }
+
+    // Clear model for a specific topic or all
+    function forget(q){
+        if(q){ delete model[topicKey(q)]; }
+        else { model={}; }
+        save();
+    }
+
+    function pruneOldTopics(){
+        const sorted=Object.entries(model).sort(([,a],[,b])=>a.lastSeen-b.lastSeen);
+        while(sorted.length>MAX_TOPICS){ const [k]=sorted.shift(); delete model[k]; }
+    }
+
+    function getStats(){
+        const topics=Object.keys(model).length;
+        const totalClicks=Object.values(model).reduce((s,t)=>s+(t.clicks||0),0);
+        return{topics,totalClicks};
+    }
+
+    load();
+    return{onSearch,onImpression,onClick,onDwell,applySkipPenalties,rankResults,scoreItem,getSeedKeywords,getTrustedDomains,getInsight,forget,getStats};
+})();
+
+// ── NEURAL INTELLIGENCE PANEL UI ─────────────────────
+function renderIntelPanel(q){
+    const insight=NLE.getInsight(q);
+    const panel=document.getElementById('intelPanel');
+    if(!insight||insight.searches<2){panel.classList.remove('show');return;}
+    panel.classList.add('show');
+    _populateIntelPanel(q,insight);
+}
+function updateIntelPanel(q){
+    const insight=NLE.getInsight(q);
+    if(!insight)return;
+    document.getElementById('intelPanel').classList.add('show');
+    _populateIntelPanel(q,insight);
+}
+function _populateIntelPanel(q,insight){
+    const kEl=document.getElementById('intelKeywords');
+    const dEl=document.getElementById('intelDomains');
+    const sEl=document.getElementById('intelSources');
+    const stEl=document.getElementById('intelStats');
+    const srcLabels={prio:'DART',local:'LOCAL',wiki:'WIKI',srx:'WEB',dom:'DOMAIN',yt:'YOUTUBE',imdb:'IMDB',li:'LINKEDIN',ig:'INSTAGRAM',twx:'TWITTER/X'};
+    kEl.innerHTML=insight.topKeywords.map(w=>`<span class="intel-tag" onclick="seedSearch('${esc(w)}')" title="Refine with keyword">${esc(w)}</span>`).join('')||'<span style="color:var(--dim);font-family:\'Share Tech Mono\',monospace;font-size:0.55rem">building...</span>';
+    dEl.innerHTML=insight.topDomains.map(d=>`<span class="intel-tag domain" onclick="filterByDomain('${esc(d)}')" title="Filter by domain">${esc(d)}</span>`).join('')||'<span style="color:var(--dim);font-family:\'Share Tech Mono\',monospace;font-size:0.55rem">building...</span>';
+    sEl.innerHTML=insight.topSources.map(s=>`<span class="intel-tag domain">${esc(srcLabels[s]||s.toUpperCase())}</span>`).join('')||'';
+    stEl.innerHTML=`Searched <b>${insight.searches}×</b> &nbsp;·&nbsp; <b>${insight.clicks}</b> clicks &nbsp;·&nbsp; model active`;
+}
+function forgetTopic(){
+    if(!_lastQuery)return;
+    NLE.forget(_lastQuery);
+    document.getElementById('intelPanel').classList.remove('show');
+}
+function seedSearch(keyword){
+    qi.value=_lastQuery+' '+keyword;
+    doSearch();
+}
+function filterByDomain(domain){
+    qi.value=_lastQuery+' site:'+domain;
+    doSearch();
+}
+
+async function wikiSearch(q){
+    const url=`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q)}&utf8=&format=json&origin=*&srlimit=8&srprop=snippet`;
+    const r=await ft(url,8000);const d=await r.json();
+    return(d.query?.search||[]).map(i=>({
+        title:i.title,
+        url:`https://en.wikipedia.org/wiki/${encodeURIComponent(i.title.replace(/ /g,'_'))}`,
+        desc:striptags(i.snippet)+'...'
+    }));
+}
+
+// ── MULTI-SOURCE WEB SEARCH ───────────────────────────
+// All sources fire in parallel. Every API verified CORS-open, no key required.
+
+async function searxSearch(q){
+    const enc=encodeURIComponent(q);
+    const settled=await Promise.allSettled([
+        fetchDDG(q,enc),
+        fetchHN(q,enc),
+        fetchReddit(q,enc),
+        fetchGDELT(q,enc),
+        fetchWikiOpenSearch(q,enc),
+        fetchGitHub(q,enc)
+    ]);
+    const merged=[];
+    const seen=new Set();
+    let srcCount=0;
+    settled.forEach(r=>{
+        if(r.status==='fulfilled'&&Array.isArray(r.value)&&r.value.length){
+            srcCount++;
+            r.value.forEach(item=>{
+                const k=(item.url||'').toLowerCase().replace(/\/$/,'');
+                if(k&&!seen.has(k)){seen.add(k);merged.push(item);}
+            });
+        }
+    });
+    console.log(`[DART] web: ${merged.length} results from ${srcCount} sources`);
+    if(!merged.length) throw new Error('No results');
+    return merged.slice(0,28);
+}
+
+// ── Source A: DuckDuckGo Instant Answer API ──────────
+// Returns abstract + related topics. Great for popular queries.
+async function fetchDDG(q,enc){
+    const r=await ft(`https://api.duckduckgo.com/?q=${enc}&format=json&no_html=1&skip_disambig=1`,8000);
+    if(!r.ok) throw new Error('DDG');
+    const d=await r.json();
+    const out=[];
+    if(d.AbstractURL&&d.Heading) out.push({title:d.Heading,url:d.AbstractURL,desc:d.AbstractText||'DuckDuckGo abstract'});
+    (d.Results||[]).forEach(x=>{if(x.FirstURL&&x.Text) out.push({title:x.Text,url:x.FirstURL,desc:x.Text});});
+    (d.RelatedTopics||[]).forEach(t=>{
+        if(t.FirstURL&&t.Text) out.push({title:t.Text.split(' - ')[0],url:t.FirstURL,desc:t.Text});
+        else if(t.Topics) t.Topics.slice(0,4).forEach(s=>{if(s.FirstURL&&s.Text) out.push({title:s.Text.split(' - ')[0],url:s.FirstURL,desc:s.Text});});
+    });
+    return out.filter(x=>x.url&&x.title);
+}
+
+// ── Source B: Hacker News via Algolia ────────────────
+// Real-time tech/startup/general news with CORS fully open
+async function fetchHN(q,enc){
+    const r=await ft(`https://hn.algolia.com/api/v1/search?query=${enc}&hitsPerPage=10`,7000);
+    if(!r.ok) throw new Error('HN');
+    const d=await r.json();
+    return(d.hits||[]).filter(h=>(h.url||h.story_url)&&h.title).map(h=>({
+        title:h.title,
+        url:h.url||`https://news.ycombinator.com/item?id=${h.objectID}`,
+        desc:`Hacker News · ${h.points||0}pts · ${h.num_comments||0} comments · by ${h.author||'?'}`
+    }));
+}
+
+// ── Source C: Reddit JSON search ─────────────────────
+// .json endpoint is CORS-open; rate limits apply but rare
+async function fetchReddit(q,enc){
+    const r=await ft(`https://www.reddit.com/search.json?q=${enc}&sort=top&limit=10&t=year`,8000);
+    if(!r.ok) throw new Error('Reddit '+r.status);
+    const d=await r.json();
+    return(d.data?.children||[]).map(c=>c.data).filter(p=>p&&p.title).map(p=>({
+        title:p.title,
+        url:p.is_self||!p.url||p.url.includes('reddit.com')?`https://reddit.com${p.permalink}`:p.url,
+        desc:`r/${p.subreddit} · ${p.score||0}pts · ${p.num_comments||0} comments · ${p.domain||''}`
+    }));
+}
+
+// ── Source D: GDELT real-time global news ─────────────
+async function fetchGDELT(q,enc){
+    // GDELT v2 doc API - returns JSON article list, CORS open
+    const url=`https://api.gdeltproject.org/api/v2/doc/doc?query=${enc}&mode=artlist&maxrecords=10&format=json&sort=hybridrel&timespan=FULL`;
+    const r=await ft(url,9000);
+    if(!r.ok) throw new Error('GDELT '+r.status);
+    const text=await r.text();
+    // GDELT sometimes returns HTML errors; check before parsing
+    if(text.trim().startsWith('<')) throw new Error('GDELT html response');
+    const d=JSON.parse(text);
+    return(d.articles||[]).filter(a=>a.url&&a.title).map(a=>({
+        title:a.title,
+        url:a.url,
+        desc:`${a.domain||'news'} · ${(a.seendate||'').slice(0,8)||'recent'} · global news`
+    }));
+}
+
+// ── Source E: Wikipedia OpenSearch (real URLs, CORS open) ─
+// Returns actual linked Wikipedia article URLs — supplements wikiSearch
+async function fetchWikiOpenSearch(q,enc){
+    // Use the morelike search to find related articles beyond exact match
+    const url=`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${enc}&format=json&origin=*&srlimit=6&srprop=snippet&srwhat=text`;
+    const r=await ft(url,7000);
+    if(!r.ok) throw new Error('WikiOS');
+    const d=await r.json();
+    // Also fetch external links from the top article
+    const top=(d.query?.search||[])[0];
+    const results=(d.query?.search||[]).slice(1).map(i=>({
+        title:i.title+' — Wikipedia',
+        url:`https://en.wikipedia.org/wiki/${encodeURIComponent(i.title.replace(/ /g,'_'))}`,
+        desc:striptags(i.snippet||'')+'...'
+    }));
+    // Fetch external links from the top Wikipedia article for this query
+    if(top){
+        try{
+            const elUrl=`https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(top.title)}&prop=extlinks&format=json&origin=*&ellimit=20`;
+            const elR=await ft(elUrl,6000);
+            const elD=await elR.json();
+            const pages=Object.values(elD.query?.pages||{});
+            const links=(pages[0]?.extlinks||[]).map(l=>l['*']||l.url||'').filter(l=>l&&l.startsWith('http')&&!l.includes('wikimedia')&&!l.includes('wikipedia'));
+            links.slice(0,6).forEach(link=>{
+                try{
+                    const host=new URL(link).hostname.replace(/^www\./,'');
+                    results.push({title:`${host} — referenced from "${top.title}"`,url:link,desc:`External link from Wikipedia article: ${top.title}`});
+                }catch(e){}
+            });
+        }catch(e){}
+    }
+    return results;
+}
+
+// ── Source F: GitHub code/repo search ─────────────────
+// CORS open for public search API (no auth = 10 req/min, enough)
+async function fetchGitHub(q,enc){
+    try{
+        const r=await ft(`https://api.github.com/search/repositories?q=${enc}&sort=stars&order=desc&per_page=5`,7000);
+        if(!r.ok) throw new Error('GH '+r.status);
+        const d=await r.json();
+        return(d.items||[]).filter(i=>i.html_url&&i.full_name).map(i=>({
+            title:`${i.full_name} — GitHub`,
+            url:i.html_url,
+            desc:`⭐ ${i.stargazers_count||0} · ${i.description||'GitHub repository'} · ${i.language||''}`
+        }));
+    }catch(e){return[];}
+}
+
+// ═══════════════════════════════════════════════════════════
+//  YOUTUBE VIDEO SEARCH + PREVIEW OVERLAY + SIGNAL REFINEMENT
+//
+//  Three integrated features:
+//
+//  1. searchYouTube(q) — fetches videos via YouTube Data API v3
+//     using either keyword search or channel lookup for @handle queries.
+//
+//  2. renderVideos(videos, q) — renders video cards where clicking the
+//     thumbnail opens the in-page preview overlay (openYTOverlay). Each
+//     card also has a small "Watch on YouTube" link that takes the user
+//     directly to youtube.com for that video without the overlay.
+//
+//  3. YouTube Signal Refinement — after YouTube results arrive, the
+//     ytSignals engine extracts the most semantically meaningful terms
+//     from video titles and channel names (using rank-weighted frequency
+//     analysis). These terms are then used to re-score all currently
+//     rendered web result cards from every other source (Wikipedia, DDG,
+//     HN, Reddit, GDELT, GitHub). Cards whose content overlaps with the
+//     YT signals receive a visible boost indicator. A refinement panel
+//     appears above the results listing all extracted signal terms so the
+//     user can see exactly what YouTube's algorithm determined was most
+//     relevant and can click any term to trigger a focused sub-search.
+// ═══════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════
+//  YOUTUBE — Data API v3 + Invidious fallback + quota guard
+//  YouTube free quota = 10,000 units/day. search.list = 100u.
+//  That's ~100 searches/day. When quota is exhausted, Google
+//  returns HTTP 403 with reason "quotaExceeded". We detect this,
+//  flag it in sessionStorage, and automatically switch to
+//  Invidious (open-source YouTube frontend, free, no key,
+//  CORS-open). Session cache prevents re-burning quota on
+//  repeated identical searches.
+//  safeSearch:'strict' is set on every API call.
+// ═══════════════════════════════════════════════════════════
+
+const YT_API_KEY    = 'AIzaSyBrhOod_Q6QoX6XQFyuaipq_ncFvx5lEac';
+const YT_SEARCH_URL = 'https://www.googleapis.com/youtube/v3/search';
+
+// Invidious public instances — tried in order until one works
+const YT_FALLBACK_INSTANCES = [
+    'https://inv.nadeko.net',
+    'https://invidious.privacydev.net',
+    'https://invidious.nerdvpn.de',
+    'https://invidious.io.lol',
+    'https://vid.puffyan.us',
+];
+
+const YT_QUOTA_FLAG   = 'dart_yt_quota_x'; // sessionStorage key
+const YT_CACHE_PFX    = 'dart_yc_';         // sessionStorage cache prefix
+
+function ytQuotaHit(){ return sessionStorage.getItem(YT_QUOTA_FLAG)==='1'; }
+function ytMarkQuota(){
+    sessionStorage.setItem(YT_QUOTA_FLAG,'1');
+    console.warn('[DART] YouTube quota exhausted — switching to Invidious fallback');
+    setStat('yt','warn','YT: QUOTA — using fallback');
+}
+
+function ytCacheGet(q){
+    try{
+        const d = JSON.parse(sessionStorage.getItem(YT_CACHE_PFX+q.toLowerCase())||'null');
+        if(!d) return null;
+        if(Date.now()-d.ts > 3600000) return null; // 1h TTL
+        return d.v;
+    }catch(e){ return null; }
+}
+function ytCacheSet(q, videos){
+    try{ sessionStorage.setItem(YT_CACHE_PFX+q.toLowerCase(), JSON.stringify({ts:Date.now(),v:videos})); }catch(e){}
+}
+
+function isChannelQuery(q){
+    return /^@/.test(q.trim())||/\b(channel|youtube\.com\/@)\b/i.test(q);
+}
+function cleanHandle(q){ return q.trim().replace(/^@/,''); }
+
+async function searchYouTube(q){
+    const raw = q.trim();
+
+    // Session cache check — no quota burned on repeated searches
+    const cached = ytCacheGet(raw);
+    if(cached && cached.length){
+        console.log('[DART] YT cache hit:', raw, cached.length, 'items');
+        setStat('yt','ok','YT: '+cached.length+' (cached)');
+        const safe = SAFE.filterVideos(cached);
+        renderVideos(safe.slice(0,12), q);
+        refineWithYTSignals(safe.slice(0,12), q);
+        return;
+    }
+
+    let videos = [];
+    if(isChannelQuery(raw)) videos = await ytChannelVideos(cleanHandle(raw));
+    if(!videos.length)      videos = await ytSearch(raw);
+
+    if(!videos.length){ setStat('yt','warn','YT: unavailable'); return; }
+
+    ytCacheSet(raw, videos);
+    const safe = SAFE.filterVideos(videos);
+    const sliced = safe.slice(0,12);
+    renderVideos(sliced, q);
+    refineWithYTSignals(sliced, q);
+}
+
+// ── Primary: YouTube Data API v3 ─────────────────────────
+async function ytSearch(q){
+    if(!ytQuotaHit()){
+        try{
+            const params = new URLSearchParams({
+                part:'snippet', q, type:'video', maxResults:12,
+                safeSearch:'strict', key:YT_API_KEY
+            });
+            const r = await ft(`${YT_SEARCH_URL}?${params}`,10000);
+            if(r.ok){
+                const d = await r.json();
+                console.log('[DART] YT API ok, items:',(d.items||[]).length);
+                setStat('yt','ok','YT: '+(d.items||[]).length+' videos');
+                return (d.items||[]).map(item=>({
+                    videoId:  item.id?.videoId||'',
+                    title:    item.snippet?.title||'',
+                    channel:  item.snippet?.channelTitle||'',
+                    views:'', duration:'',
+                    thumb:    item.snippet?.thumbnails?.medium?.url
+                              ||`https://i.ytimg.com/vi/${item.id?.videoId}/mqdefault.jpg`,
+                    url:      `https://youtube.com/watch?v=${item.id?.videoId}`
+                })).filter(v=>v.videoId);
+            } else {
+                const err = await r.json().catch(()=>({}));
+                const reason = err?.error?.errors?.[0]?.reason||'';
+                const msg    = err?.error?.message||('HTTP '+r.status);
+                console.warn('[DART] YT API error:', msg, reason);
+                if(r.status===403 && (reason.includes('quota')||reason.includes('dailyLimit')||msg.toLowerCase().includes('quota'))){
+                    ytMarkQuota();
+                } else {
+                    setStat('yt','warn','YT: '+msg.slice(0,40));
+                    return [];
+                }
+            }
+        }catch(e){
+            console.warn('[DART] YT exception:',e.name, e.message);
+            setStat('yt','warn','YT: '+e.name);
+            return [];
+        }
+    }
+    // Quota exhausted — fall through to Invidious
+    return ytInvidiousSearch(q);
+}
+
+// ── Fallback: Invidious public API (no key, CORS-open) ───
+async function ytInvidiousSearch(q){
+    const enc = encodeURIComponent(q);
+    for(const base of YT_FALLBACK_INSTANCES){
+        try{
+            const r = await ft(`${base}/api/v1/search?q=${enc}&type=video&page=1`,8000);
+            if(!r.ok) continue;
+            const d = await r.json();
+            if(!Array.isArray(d)||!d.length) continue;
+            console.log('[DART] YT Invidious ok via', base, d.length,'items');
+            setStat('yt','ok','YT: '+d.length+' (fallback)');
+            return d.filter(v=>v.videoId).slice(0,12).map(v=>({
+                videoId:  v.videoId,
+                title:    v.title||'',
+                channel:  v.author||'',
+                views:    v.viewCount ? v.viewCount.toLocaleString()+' views' : '',
+                duration: v.lengthSeconds ? Math.floor(v.lengthSeconds/60)+':'+(v.lengthSeconds%60).toString().padStart(2,'0') : '',
+                thumb:    `https://i.ytimg.com/vi/${v.videoId}/mqdefault.jpg`,
+                url:      `https://youtube.com/watch?v=${v.videoId}`
+            }));
+        }catch(e){ continue; }
+    }
+    console.warn('[DART] YT all Invidious instances failed');
+    setStat('yt','warn','YT: all sources unavailable');
+    return [];
+}
+
+// ── Channel lookup ────────────────────────────────────────
+async function ytChannelVideos(handle){
+    if(!ytQuotaHit()){
+        try{
+            const sp = new URLSearchParams({
+                part:'snippet', q:handle, type:'channel', maxResults:1,
+                safeSearch:'strict', key:YT_API_KEY
+            });
+            const r = await ft(`${YT_SEARCH_URL}?${sp}`,10000);
+            if(r.ok){
+                const d = await r.json();
+                const channelId = d.items?.[0]?.id?.channelId;
+                if(channelId){
+                    const vp = new URLSearchParams({
+                        part:'snippet', channelId, type:'video', order:'date',
+                        maxResults:12, safeSearch:'strict', key:YT_API_KEY
+                    });
+                    const r2 = await ft(`${YT_SEARCH_URL}?${vp}`,10000);
+                    if(r2.ok){
+                        const d2 = await r2.json();
+                        const items = (d2.items||[]).map(item=>({
+                            videoId: item.id.videoId,
+                            title:   item.snippet.title,
+                            channel: item.snippet.channelTitle,
+                            views:'', duration:'',
+                            thumb:   item.snippet.thumbnails?.medium?.url
+                                     ||`https://i.ytimg.com/vi/${item.id.videoId}/mqdefault.jpg`,
+                            url:     `https://youtube.com/watch?v=${item.id.videoId}`
+                        })).filter(v=>v.videoId);
+                        if(items.length) return items;
+                    }
+                }
+            } else {
+                const err = await r.json().catch(()=>({}));
+                const reason = err?.error?.errors?.[0]?.reason||'';
+                if(r.status===403&&(reason.includes('quota')||reason.includes('dailyLimit'))) ytMarkQuota();
+            }
+        }catch(e){}
+    }
+    return ytInvidiousSearch(handle);
+}
+
+
+// ── MEDIA TAB SWITCHER ────────────────────────────────
+// Manages the four media tabs: VIDEO (YouTube), IMAGES (Wikipedia/Wikimedia),
+// ★ IMDB (poster panel), and ◎ SOCIAL (profile avatar panel).
+// Each call hides all panels then shows the selected one and marks its
+// button active. The IMDB and SOCIAL tabs are hidden until results arrive.
+function switchTab(tab){
+    const tabs=['yt','img','imdb','social'];
+    const panels={yt:'vidP',img:'imgP',imdb:'imdbP',social:'socialP'};
+    // Deactivate all buttons and panels
+    tabs.forEach(t=>{
+        const btn=document.getElementById('tab-'+t);
+        const pnl=document.getElementById(panels[t]);
+        if(btn) btn.classList.remove('active');
+        if(pnl) pnl.classList.remove('active');
+    });
+    // Activate the selected tab
+    const activeBtn=document.getElementById('tab-'+tab);
+    const activePanel=document.getElementById(panels[tab]);
+    if(activeBtn) activeBtn.classList.add('active');
+    if(activePanel) activePanel.classList.add('active');
+}
+
+// ── RENDER VIDEOS ─────────────────────────────────────
+// Each card is a <div> (not an <a>) so the default click behavior
+// is controlled by JS. Clicking the thumbnail area opens the in-page
+// preview overlay. A dedicated "Watch on YouTube ↗" link in the card
+// info row navigates directly to the YouTube page in a new tab.
+function renderVideos(videos, q){
+    const vidP=document.getElementById('vidP');
+    const vg=document.getElementById('vg');
+    const vcCount=document.getElementById('vc-count');
+
+    document.getElementById('mediaOuter').style.display='block';
+    vcCount.textContent=videos.length;
+    setBadge('b-yt','cyan');
+    setStat('yt','ok','YT: '+videos.length+' videos');
+
+    videos.forEach((v,i)=>{
+        const dur=typeof v.duration==='number'?fmtDur(v.duration):v.duration||'';
+        const views=typeof v.views==='number'?fmtNum(v.views)+' views':v.views||'';
+
+        // Use a div so we fully control click behavior:
+        // thumbnail click → in-page overlay; yt link → external tab
+        const card=document.createElement('div');
+        card.className='vc';
+        card.style.animationDelay=(i*60)+'ms';
+        card.innerHTML=`
+            <div class="vc-thumb" data-videoid="${esc(v.videoId)}" title="Click to preview · Watch in Dart Alley">
+                <img data-src="${esc(v.thumb)}" alt="${esc(v.title)}">
+                <div class="vc-play"><div class="vc-play-btn"></div></div>
+                <div class="vbdg">YT</div>
+                ${dur?`<div style="position:absolute;bottom:5px;right:5px;font-family:'Share Tech Mono',monospace;font-size:0.48rem;background:rgba(0,0,0,0.85);color:#fff;padding:1px 5px;border-radius:2px">${esc(dur)}</div>`:''}
+            </div>
+            <div class="vc-info">
+                <div class="vc-title">${esc(v.title)}</div>
+                <div class="vc-meta">
+                    <span class="vc-ch">${esc(v.channel)}</span>
+                    <span class="vc-dur">${esc(views)}</span>
+                </div>
+                <a class="vc-yt-link" href="${esc(v.url)}" target="_blank" rel="noopener" title="Open this video directly on YouTube.com">WATCH ON YOUTUBE</a>
+            </div>`;
+
+        // Clicking the thumbnail area opens the in-page overlay
+        const thumbEl = card.querySelector('.vc-thumb');
+        thumbEl.style.cursor = 'pointer';
+        thumbEl.addEventListener('click', (e)=>{
+            e.preventDefault();
+            e.stopPropagation();
+            openYTOverlay(v.videoId, v.title, v.channel, v.url);
+            NLE.onClick(q, {
+                _s:'yt',
+                title: v.title,
+                url: v.url,
+                desc:`YouTube preview: ${v.channel} · ${views}`
+            });
+        });
+
+        // Clicking the "Watch on YouTube" link tracks the click but navigates normally
+        const ytLinkEl = card.querySelector('.vc-yt-link');
+        ytLinkEl.addEventListener('click', ()=>{
+            NLE.onClick(q, {
+                _s:'yt',
+                title: v.title,
+                url: v.url,
+                desc:`YouTube direct: ${v.channel} · ${views}`
+            });
+        });
+
+        const img=card.querySelector('img');
+        const obs=new IntersectionObserver(e=>{
+            if(e[0].isIntersecting){
+                img.src=img.dataset.src;
+                img.onload=()=>img.classList.add('ok');
+                img.onerror=()=>{img.src=`https://i.ytimg.com/vi/${v.videoId}/default.jpg`;img.classList.add('ok');};
+                obs.disconnect();
+            }
+        },{rootMargin:'80px'});
+        obs.observe(card);
+        vg.appendChild(card);
+    });
+}
+
+// ── YOUTUBE PREVIEW OVERLAY LOGIC ─────────────────────
+// openYTOverlay: injects an embedded iframe into the overlay and shows it.
+// The iframe uses youtube-nocookie.com for enhanced privacy, with autoplay=1
+// so playback starts immediately when the user taps the thumbnail.
+// closeYTOverlay: removes the iframe entirely (not just hides it) so the
+// video stops playing as soon as the overlay closes — no background audio.
+function openYTOverlay(videoId, title, channel, ytUrl){
+    const overlay = document.getElementById('yt-overlay');
+    const frameWrap = document.getElementById('yt-ov-frame-wrap');
+    const titleEl = document.getElementById('yt-ov-title');
+    const channelEl = document.getElementById('yt-ov-channel');
+    const gotoEl = document.getElementById('yt-ov-goto');
+
+    // Populate info
+    titleEl.textContent = title || '';
+    channelEl.textContent = channel ? '▶  ' + channel : '';
+    gotoEl.href = ytUrl || `https://youtube.com/watch?v=${videoId}`;
+
+    // Inject iframe with autoplay so video starts playing immediately
+    // Using youtube-nocookie.com to avoid unnecessary tracking cookies
+    frameWrap.innerHTML = `<iframe
+        src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}?autoplay=1&rel=0&modestbranding=1&playsinline=1"
+        title="${esc(title)}"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen>
+    </iframe>`;
+
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeYTOverlay(){
+    const overlay = document.getElementById('yt-overlay');
+    const frameWrap = document.getElementById('yt-ov-frame-wrap');
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+    // Destroy iframe so video stops playing immediately
+    frameWrap.innerHTML = '';
+}
+
+// Close overlay button
+document.getElementById('yt-ov-close').addEventListener('click', closeYTOverlay);
+
+// Close when clicking the dark backdrop (outside the player frame)
+document.getElementById('yt-overlay').addEventListener('click', function(e){
+    // Only close if the click is directly on the overlay backdrop,
+    // not on any child element inside it (player, title bar, buttons, etc.)
+    if(e.target === this) closeYTOverlay();
+});
+
+// Keyboard: Escape closes the overlay
+document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape'){
+        if(document.getElementById('yt-overlay').classList.contains('open')){
+            closeYTOverlay();
+            return;
+        }
+        // Also close image lightbox if open
+        if(document.getElementById('lb').classList.contains('open')){
+            closeLB();
+        }
+    }
+    // Image lightbox arrow navigation
+    if(document.getElementById('lb').classList.contains('open')){
+        if(e.key==='ArrowRight') lbNav(1);
+        if(e.key==='ArrowLeft') lbNav(-1);
+    }
+});
+
+
+// ═══════════════════════════════════════════════════════════
+//  UNIFIED MULTI-SOURCE SIGNAL REFINEMENT ENGINE
+//
+//  How it works (expanded from YT-only to all platform signals):
+//
+//  Previously this engine only used YouTube video titles/channels as its
+//  signal source. It now aggregates semantic signals from ALL four platforms:
+//
+//  YouTube  — video titles, channel names (rank-decay weighted by position)
+//  IMDb     — film/show titles, cast names, genre keywords (from OMDb results)
+//  Instagram — handle names, bio keywords from profile data
+//  Twitter/X — profile names, handle keywords from X results
+//  LinkedIn  — person/company names from LinkedIn result titles
+//
+//  All signals are normalized into the same weighted frequency vocabulary
+//  and merged together before scoring web result cards. This means that
+//  if someone searches "Justin Craig Venable", signals arrive from:
+//  - YouTube videos about his work/channel confirming relevant keywords
+//  - IMDb entries for any film/TV work he's credited in
+//  - Social profiles corroborating the name spelling and related terms
+//
+//  All these sources together produce a much stronger, more accurate signal
+//  vocabulary than YouTube alone, making the cross-source re-ranking of
+//  Wikipedia, DDG, Reddit, HN, GDELT, and GitHub results far more precise.
+//
+//  The refinement panel now colour-codes each signal tag by source:
+//  - Red tags   = YouTube signal
+//  - Amber tags = IMDb signal
+//  - Pink tags  = Social (Instagram/Twitter/LinkedIn) signal
+// ═══════════════════════════════════════════════════════════
+
+// Global unified signal state — reset at the start of every new search
+let unifiedSignals = { keywords: {}, topTerms: [], sources: {} };
+// Keep backward compat alias so existing refineWithYTSignals call still works
+Object.defineProperty(window,'ytSignals',{get:()=>unifiedSignals,set:(v)=>{unifiedSignals=v;}});
+
+// Stopwords to exclude from signal extraction
+const YT_STOPWORDS = new Set([
+    'the','and','for','are','was','with','this','that','from','have','not','but',
+    'all','can','its','will','been','has','had','their','they','about','more',
+    'also','into','than','when','your','our','out','use','one','two','how','who',
+    'what','which','would','could','should','these','those','there','where','after',
+    'before','other','over','such','some','very','just','like','well','most','only',
+    'both','even','same','official','video','channel','full','new','best','top',
+    'get','make','watch','year','live','first','last','here','now','then','time',
+    'part','day','using','used','make','know','need','want','take','good','great',
+    'show','look','come','back','way','thing','things','work','works','working',
+    'review','reviews','explained','tutorial','intro','introduction','basics',
+    'guide','tips','trick','tricks','feat','featuring','featuring','official',
+    'reaction','react','episode','series','season','episode','playlist','update',
+    'news','latest','today','week','month','free','easy','simple','complete',
+    'full','short','long','quick','fast','slow','really','very','actually',
+    'search','profile','page','account','people','company','jobs','linkedin',
+    'instagram','twitter','imdb','movie','film','actor','actress','director',
+    'verified','followers','following','posts','likes','comments','shares'
+]);
+
+// ── SIGNAL INJECTION: YouTube ────────────────────────────
+// Called after YouTube results arrive. Merges YT title/channel vocabulary
+// into the unified signal pool with "yt" source tagging.
+function extractYTSignals(videos){
+    const freq = {};
+    videos.forEach((v, idx)=>{
+        const rankWeight = 1.0 / (Math.sqrt(idx + 1));
+        const text = ((v.title||'') + ' ' + (v.channel||'')).toLowerCase();
+        const tokens = text.match(/\b[a-z][a-z0-9]{2,}\b/g) || [];
+        tokens.forEach(token=>{
+            if(!YT_STOPWORDS.has(token) && token.length >= 3){
+                freq[token] = (freq[token] || 0) + rankWeight;
+                // Track which source contributed this term
+                if(!unifiedSignals.sources[token]) unifiedSignals.sources[token]='yt';
+            }
+        });
+    });
+    // Merge into unified signal pool
+    Object.entries(freq).forEach(([term,score])=>{
+        unifiedSignals.keywords[term]=(unifiedSignals.keywords[term]||0)+score;
+    });
+    return rebuildTopTerms();
+}
+
+// ── SIGNAL INJECTION: IMDb ───────────────────────────────
+// Called after IMDb/OMDb results arrive. Injects title/genre/cast vocabulary
+// into the unified signal pool with "imdb" source tagging.
+function injectIMDbSignals(items){
+    if(!items||!items.length) return;
+    items.forEach((item,idx)=>{
+        const rankWeight = 1.0 / (Math.sqrt(idx + 1));
+        // Combine title + genre + cast into one text blob
+        const text=((item.title||'')+' '+(item.genre||'')+' '+(item.cast||'')+' '+(item.director||'')).toLowerCase();
+        const tokens=text.match(/\b[a-z][a-z0-9]{2,}\b/g)||[];
+        tokens.forEach(token=>{
+            if(!YT_STOPWORDS.has(token)&&token.length>=3){
+                const w=rankWeight*0.8; // IMDb signals weighted slightly lower than YT
+                unifiedSignals.keywords[token]=(unifiedSignals.keywords[token]||0)+w;
+                if(!unifiedSignals.sources[token]) unifiedSignals.sources[token]='imdb';
+            }
+        });
+    });
+    rebuildTopTerms();
+    // Re-apply refinement to already-rendered cards with the enriched signal pool
+    applySignalRefinementToCards();
+}
+
+// ── SIGNAL INJECTION: Social platforms ──────────────────
+// Called after Instagram/Twitter/LinkedIn results arrive. Injects handle
+// names and bio keywords into the unified signal pool with "social" tagging.
+function injectSocialSignals(items){
+    if(!items||!items.length) return;
+    items.forEach((item,idx)=>{
+        const rankWeight = 0.5 / (Math.sqrt(idx + 1)); // social signals weighted more conservatively
+        const text=((item.handle||'')+' '+(item.desc||'')+' '+(item.title||'')).toLowerCase();
+        const tokens=text.match(/\b[a-z][a-z0-9]{2,}\b/g)||[];
+        tokens.forEach(token=>{
+            if(!YT_STOPWORDS.has(token)&&token.length>=3){
+                unifiedSignals.keywords[token]=(unifiedSignals.keywords[token]||0)+rankWeight;
+                if(!unifiedSignals.sources[token]) unifiedSignals.sources[token]='social';
+            }
+        });
+    });
+    rebuildTopTerms();
+    applySignalRefinementToCards();
+}
+
+// ── Rebuild sorted topTerms from the unified keyword pool ─
+function rebuildTopTerms(){
+    const topTerms=Object.entries(unifiedSignals.keywords)
+        .filter(([term,score])=>score>=0.3&&term.length>=3)
+        .sort(([,a],[,b])=>b-a)
+        .slice(0,28)
+        .map(([term,score])=>({term,score,src:unifiedSignals.sources[term]||'yt'}));
+    unifiedSignals.topTerms=topTerms;
+    return topTerms;
+}
+
+// Score how strongly a web result card overlaps with unified signals
+function scoreCardWithYTSignals(titleText, descText){
+    if(!unifiedSignals.topTerms.length) return 0;
+    const combined = (titleText + ' ' + descText).toLowerCase();
+    let boost = 0;
+    unifiedSignals.topTerms.forEach(({ term, score })=>{
+        if(combined.includes(term)){
+            const titleBonus = titleText.toLowerCase().includes(term) ? 1.6 : 1.0;
+            boost += score * titleBonus * 0.7;
+        }
+    });
+    return Math.min(boost, 18);
+}
+
+// Apply signal refinement to already-rendered web result cards.
+// Safe to call multiple times as new signal sources arrive — each call
+// re-scores all cards based on the current accumulated signal pool.
+function applySignalRefinementToCards(){
+    const cards=Array.from(rg.querySelectorAll('.card'));
+    if(!cards.length) return;
+    let boostedCount=0;
+    cards.forEach(card=>{
+        const titleEl=card.querySelector('.ctitle');
+        const snippetEl=card.querySelector('.csnip');
+        if(!titleEl||!snippetEl) return;
+        const titleText=titleEl.textContent||'';
+        const descText=snippetEl.textContent||'';
+        const boost=scoreCardWithYTSignals(titleText,descText);
+        if(boost>=2.5){
+            boostedCount++;
+            let existingBar=card.querySelector('.yt-boost-bar');
+            if(!existingBar){
+                existingBar=document.createElement('div');
+                existingBar.className='yt-boost-bar';
+                existingBar.style.cssText='position:absolute;bottom:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(255,68,68,0.7));pointer-events:none;transition:width 0.5s ease;border-radius:0 0 4px 0';
+                card.style.position='relative';
+                card.appendChild(existingBar);
+            }
+            const widthPct=Math.round(20+((boost-2.5)/15.5)*80);
+            existingBar.style.width=widthPct+'%';
+            existingBar.title=`Multi-source signal overlap: ${boost.toFixed(1)} (YT+IMDb+Social)`;
+            if(boost>=6&&!card.querySelector('.yt-signal-badge')){
+                const badge=document.createElement('div');
+                badge.className='yt-signal-badge';
+                badge.textContent='SIGNAL';
+                badge.title='This result strongly aligns with cross-source signals (YouTube + IMDb + Social)';
+                card.appendChild(badge);
+            }
+        }
+    });
+    return boostedCount;
+}
+
+// Apply YT signal refinement — now calls the unified engine.
+// Kept as a named function since it's called from searchYouTube.
+function refineWithYTSignals(videos, q){
+    const topTerms = extractYTSignals(videos);
+    if(!topTerms.length){ console.log('[DART] Signal engine: no YT terms'); return; }
+    console.log('[DART] YT signals:', topTerms.slice(0,10).map(t=>t.term));
+    _updateRefinementPanel(q, topTerms);
+    const boostedCount=applySignalRefinementToCards();
+    const topTermStr=topTerms.slice(0,4).map(t=>t.term).join(' · ');
+    setStat('yt-refine','ok',`SIGNAL: ${topTermStr}${boostedCount?' · '+boostedCount+' boosted':''}`);
+    console.log(`[DART] Signal refinement: ${boostedCount} cards boosted`);
+}
+
+// Update the refinement panel UI with current signal terms.
+// Colour-codes tags by source: red=YT, amber=IMDb, pink=social.
+function _updateRefinementPanel(q, topTerms){
+    const panel=document.getElementById('ytRefinePanel');
+    const tagsEl=document.getElementById('ytRefineTags');
+    const noteEl=document.getElementById('ytRefineNote');
+    if(!panel||!tagsEl) return;
+    const sources={yt:'',imdb:'from-imdb',social:'from-social'};
+    const boostCount=Math.min(topTerms.length,20);
+    noteEl.textContent=`${boostCount} TERMS · YT+IMDB+SOCIAL SIGNALS`;
+    tagsEl.innerHTML=topTerms.slice(0,boostCount).map((t,i)=>{
+        const srcCls=sources[t.src]||'';
+        const hiCls=i<5?'hi':'';
+        return `<span class="yt-refine-tag ${hiCls} ${srcCls}"
+            onclick="seedSearch('${esc(t.term)}')"
+            title="Signal from ${t.src.toUpperCase()} · Click to search: ${esc(q)} ${esc(t.term)}">${esc(t.term)}</span>`;
+    }).join('');
+    panel.classList.add('show');
+}
+
+
+function fmtNum(n){
+    if(n>=1e9)return(n/1e9).toFixed(1)+'B';
+    if(n>=1e6)return(n/1e6).toFixed(1)+'M';
+    if(n>=1e3)return(n/1e3).toFixed(1)+'K';
+    return String(n);
+}
+function fmtDur(s){
+    if(!s)return'';
+    const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;
+    return h?`${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`:`${m}:${String(sec).padStart(2,'0')}`;
+}
+
+
+// Source 1: Wikipedia exact-phrase page images (person-name aware)
+// Source 2: Wikipedia People search (pageprops hatnote + images)
+// Source 3: Wikimedia Commons file search
+
+async function searchImages(q){
+    const imgs=[];
+    // Build both an exact-phrase and an open query for fallback
+    const qExact=`"${q}"`;          // wrapped in quotes = exact phrase in Wikipedia search
+    const qOpen=q;
+
+    // === SOURCE A: Wikipedia EXACT PHRASE page images ===
+    // By using quotes around the query, Wikipedia's search engine only returns
+    // articles whose text contains the exact phrase, dramatically reducing false
+    // positives for common-word names like "Craig" or "Venable" that would
+    // otherwise match hundreds of unrelated articles.
+    try{
+        const url=`https://en.wikipedia.org/w/api.php?`+
+            `action=query&generator=search&gsrsearch=${encodeURIComponent(qExact)}`+
+            `&prop=pageimages&format=json&origin=*&pithumbsize=500&gsrlimit=10&pilimit=10`;
+        const r=await ft(url,8000);const d=await r.json();
+        const pages=Object.values(d.query?.pages||{});
+        pages.forEach(p=>{
+            if(p.thumbnail){
+                imgs.push({
+                    thumb: p.thumbnail.source,
+                    full:  p.thumbnail.source.replace(/\/\d+px-/,'/800px-'),
+                    title: p.title,
+                    link:  `https://en.wikipedia.org/wiki/${encodeURIComponent((p.title||'').replace(/ /g,'_'))}`,
+                    src:   'WIKIPEDIA',
+                    relevance: 10  // highest relevance — exact phrase match
+                });
+            }
+        });
+    }catch(e){console.warn('[DART] wiki images exact:',e.message);}
+
+    // === SOURCE B: Wikipedia OPEN SEARCH page images (fallback if exact returns few) ===
+    // Only run if exact phrase search returned fewer than 4 images.
+    // Uses the same open query but filters pages whose title contains a word
+    // from the query to avoid completely unrelated results.
+    if(imgs.length<4){
+        try{
+            const url=`https://en.wikipedia.org/w/api.php?`+
+                `action=query&generator=search&gsrsearch=${encodeURIComponent(qOpen)}`+
+                `&prop=pageimages&format=json&origin=*&pithumbsize=500&gsrlimit=20&pilimit=20`;
+            const r=await ft(url,8000);const d=await r.json();
+            const pages=Object.values(d.query?.pages||{});
+            // Filter: only keep pages whose title shares at least one word with query
+            const qWords=q.toLowerCase().split(/\s+/).filter(w=>w.length>2);
+            pages.forEach(p=>{
+                if(!p.thumbnail) return;
+                const titleLower=(p.title||'').toLowerCase();
+                const relevant=qWords.some(w=>titleLower.includes(w));
+                if(!relevant) return; // skip unrelated pages
+                imgs.push({
+                    thumb: p.thumbnail.source,
+                    full:  p.thumbnail.source.replace(/\/\d+px-/,'/800px-'),
+                    title: p.title,
+                    link:  `https://en.wikipedia.org/wiki/${encodeURIComponent((p.title||'').replace(/ /g,'_'))}`,
+                    src:   'WIKIPEDIA',
+                    relevance: 5
+                });
+            });
+        }catch(e){console.warn('[DART] wiki images open:',e.message);}
+    }
+
+    // === SOURCE C: Wikimedia Commons EXACT PHRASE search ===
+    try{
+        const surl=`https://commons.wikimedia.org/w/api.php?`+
+            `action=query&list=search&srnamespace=6&srsearch=${encodeURIComponent(qExact)}`+
+            `&format=json&origin=*&srlimit=16&srprop=`;
+        const sr=await ft(surl,8000);const sd=await sr.json();
+        let fileTitles=(sd.query?.search||[]).map(s=>s.title);
+
+        // If exact phrase returns nothing, fall back to open search filtered by query words
+        if(!fileTitles.length){
+            const surl2=`https://commons.wikimedia.org/w/api.php?`+
+                `action=query&list=search&srnamespace=6&srsearch=${encodeURIComponent(qOpen)}`+
+                `&format=json&origin=*&srlimit=16&srprop=`;
+            const sr2=await ft(surl2,8000);const sd2=await sr2.json();
+            const qWords=q.toLowerCase().split(/\s+/).filter(w=>w.length>2);
+            fileTitles=(sd2.query?.search||[])
+                .filter(s=>qWords.some(w=>s.title.toLowerCase().includes(w)))
+                .map(s=>s.title);
+        }
+
+        if(fileTitles.length){
+            const titlesParam=fileTitles.slice(0,16).map(t=>encodeURIComponent(t)).join('%7C');
+            const iurl=`https://commons.wikimedia.org/w/api.php?`+
+                `action=query&titles=${titlesParam}`+
+                `&prop=imageinfo&iiprop=url&iiurlwidth=400&format=json&origin=*`;
+            const ir=await ft(iurl,8000);const id2=await ir.json();
+            const ipages=Object.values(id2.query?.pages||{});
+            ipages.forEach(p=>{
+                const ii=p.imageinfo?.[0];
+                if(ii?.thumburl||ii?.url){
+                    const title=(p.title||'').replace(/^File:/,'');
+                    imgs.push({
+                        thumb: ii.thumburl||ii.url,
+                        full:  ii.url||ii.thumburl,
+                        title: title,
+                        link:  `https://commons.wikimedia.org/wiki/${encodeURIComponent(p.title||'')}`,
+                        src:   'WIKIMEDIA',
+                        relevance: 4
+                    });
+                }
+            });
+        }
+    }catch(e){console.warn('[DART] wikimedia images:',e.message);}
+
+    // Deduplicate by thumbnail URL, then sort highest relevance first
+    const seen=new Set();
+    allImgs=imgs
+        .filter(i=>{if(seen.has(i.thumb))return false;seen.add(i.thumb);return true;})
+        .sort((a,b)=>(b.relevance||0)-(a.relevance||0));
+
+    // ── SAFE: filter blocked image sources ────────────────
+    allImgs = SAFE.filterImages(allImgs);
+
+    if(allImgs.length){
+        setBadge('b-img','purp');
+        setStat('img','ok','IMG: '+allImgs.length+' found');
+        renderImgs(0);
+    } else {
+        setStat('img','warn','IMG: no results');
+    }
+}
+
+function renderImgs(page){
+    const start=page*IPP;
+    const slice=allImgs.slice(start,start+IPP);
+    if(!slice.length)return;
+
+    document.getElementById('mediaOuter').style.display='block';
+    ic.textContent=allImgs.length;
+
+    slice.forEach((img,i)=>{
+        const card=document.createElement('div');
+        card.className='ic shim';
+        card.style.animationDelay=(i*70)+'ms';
+        card.dataset.idx=String(start+i);
+        card.innerHTML=`<img data-src="${esc(img.thumb)}" alt="${esc(img.title)}">
+            <div class="ov">${esc(img.title)}</div>
+            <div class="ibdg">${esc(img.src)}</div>`;
+        card.onclick=()=>openLB(start+i);
+        ig.appendChild(card);
+
+        // Lazy load
+        const el=card.querySelector('img');
+        const obs=new IntersectionObserver(e=>{
+            if(e[0].isIntersecting){
+                el.src=el.dataset.src;
+                el.onload=()=>{el.classList.add('ok');card.classList.remove('shim');};
+                el.onerror=()=>{card.remove();};
+                obs.disconnect();
+            }
+        },{rootMargin:'120px'});
+        obs.observe(card);
+    });
+
+    imgPage=page;
+    moreBtn.style.display=allImgs.length>(page+1)*IPP?'block':'none';
+}
+function loadMore(){renderImgs(imgPage+1);}
+
+// ── LIGHTBOX (for images) ──────────────────────────────
+let lbI=0;
+document.getElementById('lb-x').onclick=()=>closeLB();
+document.getElementById('lb').onclick=e=>{if(e.target===document.getElementById('lb'))closeLB();};
+function openLB(idx){
+    lbI=idx;const img=allImgs[idx];if(!img)return;
+    document.getElementById('lb-img').src=img.full||img.thumb;
+    document.getElementById('lb-meta').innerHTML=
+        `${esc(img.title)}<br><a href="${esc(img.link)}" target="_blank" rel="noopener">${esc(img.src)}</a>`;
+    document.getElementById('lb').classList.add('open');
+    document.body.style.overflow='hidden';
+}
+function closeLB(){document.getElementById('lb').classList.remove('open');document.body.style.overflow='';}
+function lbNav(d){const n=lbI+d;if(n>=0&&n<allImgs.length)openLB(n);}
+
+// ── RENDER WEB RESULTS ────────────────────────────────
+let _lastQuery='';
+function renderWeb(results,q){
+    _lastQuery=q;
+    rc.textContent=results.length;
+    if(!results.length){
+        rg.innerHTML=`<div class="nr"><div class="nr-code">404</div><div class="nr-msg">NO PATHWAYS FOR &ldquo;${esc(q)}&rdquo;</div></div>`;
+        return;
+    }
+    const groups={prio:[],local:[],wiki:[],srx:[],dom:[],imdb:[],li:[],ig:[],twx:[]};
+    results.forEach(r=>(groups[r._s]||groups.srx).push(r));
+    const labels={prio:'◈ DART MEADOW — PRIORITY',local:'◉ LOCAL NEURAL INDEX',wiki:'◉ WIKIPEDIA LIVE FEED',srx:'◉ LIVE WEB — DDG · HN · REDDIT · GDELT',dom:'◈ DOMAIN NETWORK — OFFICIAL SITES',imdb:'★ IMDB — FILM · TV · TALENT',li:'in LINKEDIN — PEOPLE · COMPANIES · JOBS',ig:'◎ INSTAGRAM — PROFILES · CONTENT',twx:'✕ TWITTER/X — POSTS · PROFILES · TRENDS'};
+    let delay=0;
+    Object.entries(groups).forEach(([src,items])=>{
+        if(!items.length)return;
+        const d=document.createElement('div');d.className='sdiv';d.textContent=labels[src];rg.appendChild(d);
+        items.forEach(item=>{delay+=50;rg.appendChild(mkCard(item,delay,q));});
+    });
+}
+
+function mkCard(item,delay,q){
+    q=q||_lastQuery;
+    const c=document.createElement('div');
+    c.className='card'+(item._s==='prio'?' prio':item._s==='dom'?' dom':item._s==='imdb'?' imdb':item._s==='li'?' li':item._s==='ig'?' ig-s':item._s==='twx'?' twx':'');
+    c.style.animationDelay=delay+'ms';
+    const bc={prio:'cb-l',local:'cb-l',wiki:'cb-w',srx:'cb-s',dom:'cb-g',imdb:'cb-imdb',li:'cb-li',ig:'cb-ig',twx:'cb-twx'}[item._s]||'cb-s';
+    const bl={prio:'DART',local:'LOCAL',wiki:'WIKI',srx:'WEB',dom:'DOMAIN',imdb:'IMDB',li:'LINKEDIN',ig:'INSTAGRAM',twx:'TWITTER/X'}[item._s]||'WEB';
+    const dm=getDom(item.url||'');
+    const path=(item.url||'').replace(/^https?:\/\//,'').replace(/^[^\/]*/,'');
+    let tagsHtml='';
+    if(item._s==='dom'&&item.related&&item.related.length){
+        tagsHtml='<div class="dom-tags">'+item.related.map(r=>`<a href="${esc(r.url)}" class="dom-tag${r.live?' live':''}" target="_blank" rel="noopener">${esc(r.label)}</a>`).join('')+'</div>';
+    }
+    // NLE signal strength indicator
+    const sig=NLE.scoreItem(q,item);
+    const sigPct=Math.min(100,Math.max(0,(sig-30)*1.5));
+    const sigColor=sigPct>60?'var(--green)':sigPct>30?'var(--cyan)':'var(--dim)';
+    const sigBar=sig>52?`<div class="nle-bar" title="Neural relevance: ${Math.round(sig)}" style="position:absolute;bottom:0;left:0;height:2px;width:${sigPct}%;background:${sigColor};opacity:0.6;transition:width 0.4s;"></div>`:'';
+
+    c.innerHTML=`<div class="ct"><a href="${esc(item.url||'#')}" class="ctitle nle-link" target="_blank" rel="noopener">${esc(item.title||'Untitled')}</a><span class="cbdg ${bc}">${bl}</span></div><div class="curl"><span class="ud">${esc(dm)}</span>${esc(path)}</div><div class="csnip">${esc(item.desc||'No signal.')}</div>${tagsHtml}${sigBar}`;
+
+    // ── NLE click tracking ──
+    const link=c.querySelector('.nle-link');
+    if(link){
+        let hoverStart=0;
+        c.addEventListener('mouseenter',()=>hoverStart=Date.now());
+        c.addEventListener('mouseleave',()=>{
+            if(hoverStart){ NLE.onDwell(q,item,(Date.now()-hoverStart)/1000); hoverStart=0; }
+        });
+        link.addEventListener('click',()=>{
+            NLE.onClick(q,item);
+            if(hoverStart){ NLE.onDwell(q,item,(Date.now()-hoverStart)/1000); }
+            updateIntelPanel(q);
+        });
+    }
+    return c;
+}
+
+// ── DOMAIN NETWORK DISCOVERY ──────────────────────────
+// Step 1: Ask Wikipedia for the top article matching the query, extract Wikidata ID
+// Step 2: Fetch wikidata entity → official website (P856) + social links
+// Step 3: Generate smart domain candidates & probe them
+// Step 4: Inject domain cards at the TOP of the results grid
+
+async function searchDomains(q, existingResults){
+    const domResults=[];
+    const enc=encodeURIComponent(q);
+
+    // Run probe + Wikidata lookup IN PARALLEL for speed
+    const root=q.toLowerCase().replace(/[^a-z0-9]/g,'');
+    const rootWords=q.toLowerCase().replace(/[^a-z0-9 ]/g,'').split(/\s+/).filter(w=>w.length>2);
+
+    // Build candidate list: query-derived slugs + common TLDs
+    const candidateRoots=[root,...rootWords.map(w=>w),...(rootWords.length>1?[rootWords.join('')]:[])]
+        .filter((v,i,a)=>a.indexOf(v)===i).slice(0,3);
+    const tlds=['.com','.org','.net','.io','.app','.dev','.co','.ai','.band','.music','.studio','.tech'];
+    const allCandidates=[];
+    const seenC=new Set();
+    candidateRoots.forEach(cr=>{
+        tlds.forEach(tld=>{
+            const dom=cr+tld;
+            if(!seenC.has(dom)){seenC.add(dom);allCandidates.push({url:`https://${dom}`,label:dom});}
+        });
+    });
+
+    const [probeResults, wikiResult] = await Promise.allSettled([
+        probeDomains(allCandidates.slice(0,18)),
+        fetchWikiOfficial(q)
+    ]);
+
+    const probed = probeResults.status==='fulfilled'?probeResults.value:[];
+    const wikiOfficial = wikiResult.status==='fulfilled'?wikiResult.value:null;
+
+    if(wikiOfficial&&wikiOfficial.url){
+        // Wikidata has an authoritative answer
+        const officialDom=getDom(wikiOfficial.url);
+        const offRoot=(officialDom.match(/^(?:www\.)?([^.]+)/)||[])[1]||'';
+        // Build related list: probe results for the official root + any live candidates
+        const relCandidates=tlds.map(t=>({url:`https://${offRoot}${t}`,label:`${offRoot}${t}`}));
+        const relProbed=await probeDomains(relCandidates);
+        const related=relProbed.filter(r=>r.label!==officialDom.replace(/^www\./,''));
+        domResults.push({
+            _s:'dom',
+            title:`${wikiOfficial.label} — Official Domain Network`,
+            url:wikiOfficial.url,
+            desc:`Wikidata-verified official website${wikiOfficial.desc?': '+wikiOfficial.desc:''}.`,
+            related:related
+        });
+        setBadge('b-dom','cyan');
+        setStat('dom','ok','DOM: verified official + '+(related.filter(r=>r.live).length)+' probed');
+    } else {
+        // No Wikidata hit — use probe results directly
+        const live=probed.filter(r=>r.live);
+        if(live.length){
+            domResults.push({
+                _s:'dom',
+                title:`${q} — Domain Network`,
+                url:live[0].url,
+                desc:`Live domain(s) found for "${q}". ${live.length} active endpoint(s) detected.`,
+                related:live.slice(1,8)
+            });
+            setBadge('b-dom','cyan');
+            setStat('dom','ok','DOM: '+live.length+' live');
+        } else if(probed.length){
+            // Show candidates even if unconfirmed
+            domResults.push({
+                _s:'dom',
+                title:`${q} — Candidate Domains`,
+                url:probed[0].url,
+                desc:`Possible domain network for "${q}". CORS prevents live confirmation; links may be valid.`,
+                related:probed.slice(1,8)
+            });
+            setBadge('b-dom','cyan');
+            setStat('dom','ok','DOM: '+probed.length+' candidates');
+        }
+    }
+
+    if(domResults.length){
+        const divider=document.createElement('div');
+        divider.className='sdiv';
+        divider.textContent='◈ DOMAIN NETWORK — OFFICIAL SITES';
+        rg.insertBefore(divider,rg.firstChild);
+        [...domResults].reverse().forEach(item=>{
+            const card=mkCard(item,0);
+            rg.insertBefore(card,rg.children[1]||rg.firstChild);
+        });
+        rc.textContent=String(parseInt(rc.textContent||'0')+domResults.length);
+    }
+}
+
+// Fetch official website from Wikidata for a query
+async function fetchWikiOfficial(q){
+    try{
+        const enc=encodeURIComponent(q);
+        const wsR=await ft(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${enc}&utf8=&format=json&origin=*&srlimit=5&srprop=snippet`,7000);
+        const wsD=await wsR.json();
+        const pages=wsD.query?.search||[];
+
+        // Score: prefer org/software/band over person
+        const scored=pages.map(p=>{
+            const tl=p.title.toLowerCase();const ql=q.toLowerCase();
+            let s=0;
+            if(tl===ql)s+=10;else if(tl.startsWith(ql))s+=5;else if(tl.includes(ql))s+=2;
+            if(tl.includes('disambiguation'))s-=10;
+            const sn=(p.snippet||'').toLowerCase();
+            if(/\b(company|software|band|group|organization|foundation|corporation|startup|inc\.|ltd\.)\b/.test(sn))s+=5;
+            if(/\b(born|footballer|politician|actor|actress|singer|rapper|ceo|cto)\b/.test(sn)&&!/\b(company|software|band)\b/.test(sn))s-=5;
+            return{...p,s};
+        }).sort((a,b)=>b.s-a.s);
+
+        const top=scored[0];
+        if(!top)return null;
+
+        // Get wikidata ID
+        const wpR=await ft(`https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(top.title)}&prop=pageprops&format=json&origin=*`,7000);
+        const wpD=await wpR.json();
+        const pg=Object.values(wpD.query?.pages||{})[0];
+        const wdId=pg?.pageprops?.wikibase_item;
+        if(!wdId)return null;
+
+        // Fetch wikidata entity
+        const wdR=await ft(`https://www.wikidata.org/wiki/Special:EntityData/${wdId}.json`,9000);
+        const wdData=await wdR.json();
+        const entity=wdData.entities?.[wdId];
+        if(!entity)return null;
+
+        const sites=(entity.claims?.P856||[]).map(c=>c.mainsnak?.datavalue?.value).filter(Boolean);
+        if(!sites.length)return null;
+
+        return{
+            url:sites[0],
+            label:entity.labels?.en?.value||top.title,
+            desc:entity.descriptions?.en?.value||''
+        };
+    }catch(e){return null;}
+}
+
+async function injectGuessedDomains(q, title, domResults){
+    // kept for compatibility but now handled above
+}
+
+function generateCandidates(root, knownDomain){
+    const tlds=['.com','.org','.net','.io','.app','.dev','.studio','.music','.band'];
+    const prefixes=['','www.'];
+    const candidates=[];
+    const seen=new Set();
+    // If we have a known domain, start with it
+    if(knownDomain){
+        const base=knownDomain.replace(/^www\./,'');
+        if(!seen.has(base)){seen.add(base);candidates.push({url:`https://${base}`,label:base});}
+    }
+    tlds.forEach(tld=>{
+        const dom=root+tld;
+        if(!seen.has(dom)){seen.add(dom);candidates.push({url:`https://${dom}`,label:dom});}
+    });
+    return candidates.slice(0,12);
+}
+
+async function probeDomains(candidates){
+    // no-cors HEAD — opaque response = domain exists, TypeError = DNS/network fail
+    // We use a hidden iframe trick: inject a sandboxed img to test reachability
+    // Actually: no-cors fetch throws TypeError on DNS fail, returns OpaqueResponse on success
+    // The browser WILL log "Failed to fetch" for DNS errors even if caught in JS.
+    // Solution: use a 1px image probe instead — errors are silent.
+    const results=await Promise.all(candidates.map(c=>probeOne(c)));
+    return results.sort((a,b)=>(b.live?1:0)-(a.live?1:0));
+}
+
+function probeOne(c){
+    return new Promise(resolve=>{
+        const img=new Image();
+        const timer=setTimeout(()=>{
+            img.src='';
+            resolve({...c,live:false});
+        },3500);
+        img.onload=()=>{clearTimeout(timer);resolve({...c,live:true});};
+        // onerror can mean domain exists but returns non-image (still live!) 
+        // vs DNS fail which also fires onerror but much faster
+        // We use timing: <200ms = likely DNS fail, >200ms = domain responded
+        const t0=Date.now();
+        img.onerror=()=>{
+            clearTimeout(timer);
+            const elapsed=Date.now()-t0;
+            // If it errored in >150ms, server likely responded (just not an image)
+            resolve({...c,live:elapsed>150});
+        };
+        img.src=c.url+'/favicon.ico?_='+Date.now();
+    });
+}
+
+
+// ═══════════════════════════════════════════════════════════
+//  IMDB SEARCH + POSTER VISUAL PANEL
+//
+//  Two-stage approach:
+//  Stage 1: OMDb API (omdbapi.com) — free, CORS-open, returns JSON with
+//    poster URLs, ratings, cast, genre. API key is a free public test key.
+//    Returns up to 10 results for the query.
+//  Stage 2: For each result that has a Poster URL, lazy-load the actual
+//    poster image into the IMDB visual panel (★ IMDB tab in the media panel).
+//    Each poster card shows: thumbnail image, title, year, type, IMDb rating.
+//  Stage 3: Inject IMDb title/cast/genre vocabulary into the unified signal
+//    engine so this data cross-boosts web result cards from all other sources.
+//
+//  The OMDb API is publicly available with a free API key. The key below is
+//  the standard public demo key used in OMDb documentation examples.
+// ═══════════════════════════════════════════════════════════
+
+const OMDB_KEY = 'trilogy'; // Free OMDb public demo key — works without registration
+
+async function searchIMDb(q){
+    try{
+        // ── Stage 1: OMDb search — try title search first, then person search ──
+        // OMDb s= endpoint searches titles. For person searches (e.g. "Justin Craig Venable")
+        // it often returns nothing because it's not a known title. We handle both cases:
+        // Case A: Query matches titles → show those
+        // Case B: No title matches → person was searched; show their filmography via
+        //         a separate name-aware approach (search each name word against cast)
+
+        const titleUrl=`https://www.omdbapi.com/?s=${encodeURIComponent(q)}&apikey=${OMDB_KEY}&page=1`;
+        const titleR=await ft(titleUrl,9000);
+        if(!titleR.ok) throw new Error('OMDb HTTP '+titleR.status);
+        const titleD=await titleR.json();
+
+        let results=[];
+
+        if(titleD.Response==='True'&&titleD.Search?.length){
+            // ── Case A: Title results found ──────────────────────────
+            const items=titleD.Search.slice(0,10);
+
+            // Enrich top 3 with full detail (cast, genre, plot, rating)
+            const detailPromises=items.slice(0,3).map(async item=>{
+                try{
+                    const dr=await ft(`https://www.omdbapi.com/?i=${item.imdbID}&apikey=${OMDB_KEY}&plot=short`,6000);
+                    if(!dr.ok) return item;
+                    const dd=await dr.json();
+                    return dd.Response==='True'?{...item,...dd}:item;
+                }catch(e){ return item; }
+            });
+            const detailed=await Promise.all(detailPromises);
+            detailed.forEach((d2,idx)=>{ items[idx]={...items[idx],...d2}; });
+
+            results=items.map(i=>{
+                const year=i.Year?` (${i.Year})`:'';
+                const rating=i.imdbRating&&i.imdbRating!=='N/A'?` · ★ ${i.imdbRating}/10`:'';
+                const genre=i.Genre&&i.Genre!=='N/A'?` · ${i.Genre}`:'';
+                const cast=i.Actors&&i.Actors!=='N/A'?` · Cast: ${i.Actors}`:'';
+                const typeLabel=i.Type==='movie'?'FILM':i.Type==='series'?'SERIES':i.Type==='episode'?'EP':(i.Type||'IMDB').toUpperCase();
+                const desc=`${typeLabel}${year}${rating}${genre}${cast}`;
+                return{
+                    _s:'imdb',title:i.Title+year,
+                    url:`https://www.imdb.com/title/${i.imdbID}/`,
+                    desc,poster:i.Poster&&i.Poster!=='N/A'?i.Poster:null,
+                    imdbId:i.imdbID,year:i.Year,type:i.Type,
+                    rating:i.imdbRating&&i.imdbRating!=='N/A'?i.imdbRating:null,
+                    genre:i.Genre&&i.Genre!=='N/A'?i.Genre:'',
+                    cast:i.Actors&&i.Actors!=='N/A'?i.Actors:'',
+                    director:i.Director&&i.Director!=='N/A'?i.Director:'',
+                    plot:i.Plot&&i.Plot!=='N/A'?i.Plot:''
+                };
+            });
+
+        } else {
+            // ── Case B: No title matches — treat as person/name search ──────────
+            // Strategy: search for the last name alone (most likely to match filmographies)
+            // and check if any result cast/director fields contain the full query name.
+            // Also try first+last combinations.
+            const words=q.trim().split(/\s+/);
+            const lastName=words[words.length-1];
+            const firstName=words[0];
+
+            // Try searching just the last name to find works they may be credited in
+            let personResults=[];
+            try{
+                const nameUrl=`https://www.omdbapi.com/?s=${encodeURIComponent(lastName)}&apikey=${OMDB_KEY}&page=1`;
+                const nameR=await ft(nameUrl,7000);
+                const nameD=await nameR.json();
+                if(nameD.Response==='True'&&nameD.Search?.length){
+                    // Fetch full details for each result and check if person appears in cast
+                    const detailPromises2=nameD.Search.slice(0,8).map(async item=>{
+                        try{
+                            const dr=await ft(`https://www.omdbapi.com/?i=${item.imdbID}&apikey=${OMDB_KEY}&plot=short`,5000);
+                            if(!dr.ok) return null;
+                            const dd=await dr.json();
+                            return dd.Response==='True'?{...item,...dd}:null;
+                        }catch(e){return null;}
+                    });
+                    const detailed2=(await Promise.all(detailPromises2)).filter(Boolean);
+                    // Keep only results where the person's name appears in cast or director
+                    const qLower=q.toLowerCase();
+                    personResults=detailed2.filter(i=>{
+                        const actors=(i.Actors||'').toLowerCase();
+                        const director=(i.Director||'').toLowerCase();
+                        const writer=(i.Writer||'').toLowerCase();
+                        return actors.includes(qLower)||director.includes(qLower)||writer.includes(qLower)||
+                               actors.includes(lastName.toLowerCase())||director.includes(lastName.toLowerCase());
+                    });
+                }
+            }catch(e){console.warn('[DART] IMDb person fallback:',e);}
+
+            if(personResults.length){
+                results=personResults.map(i=>{
+                    const year=i.Year?` (${i.Year})`:'';
+                    const rating=i.imdbRating&&i.imdbRating!=='N/A'?` · ★ ${i.imdbRating}/10`:'';
+                    const genre=i.Genre&&i.Genre!=='N/A'?` · ${i.Genre}`:'';
+                    const typeLabel=i.Type==='movie'?'FILM':i.Type==='series'?'SERIES':(i.Type||'IMDB').toUpperCase();
+                    return{
+                        _s:'imdb',title:i.Title+year,
+                        url:`https://www.imdb.com/title/${i.imdbID}/`,
+                        desc:`${typeLabel}${year}${rating}${genre} · Features: ${i.Actors||''}`,
+                        poster:i.Poster&&i.Poster!=='N/A'?i.Poster:null,
+                        imdbId:i.imdbID,year:i.Year,type:i.Type,
+                        rating:i.imdbRating&&i.imdbRating!=='N/A'?i.imdbRating:null,
+                        genre:i.Genre&&i.Genre!=='N/A'?i.Genre:'',
+                        cast:i.Actors&&i.Actors!=='N/A'?i.Actors:'',
+                        director:i.Director&&i.Director!=='N/A'?i.Director:'',
+                    };
+                });
+            }
+        }
+
+        // ── Always inject guaranteed deep-link fallback cards ──────────────────
+        // These always work regardless of whether OMDb found anything.
+        // They give the user direct jump-links to IMDb's own search for the query.
+        const deepLinks=[
+            {_s:'imdb',title:`IMDb Name Search: "${q}"`,url:`https://www.imdb.com/find/?q=${encodeURIComponent(q)}&s=nm`,desc:`Search IMDb for people named "${q}" — actors, directors, writers, crew`},
+            {_s:'imdb',title:`IMDb Full Search: "${q}"`,url:`https://www.imdb.com/find/?q=${encodeURIComponent(q)}&s=all`,desc:`Search all of IMDb for "${q}" — titles, names, characters, companies, keywords`}
+        ];
+
+        // Combine results and deep-links (results first, then deep-links)
+        const allCards=[...results,...deepLinks];
+        _injectIMDbCards(allCards,q);
+
+        // Render poster visual panel if we have poster images
+        if(results.length) _renderIMDbPosters(results);
+
+        // Inject signals from whatever we found
+        injectIMDbSignals(results.map(r=>({title:r.title,genre:r.genre,cast:r.cast,director:r.director})));
+
+        setBadge('b-imdb','cyan');
+        const msg=results.length
+            ?`IMDB: ${results.length} result${results.length>1?'s':''} · ${results.filter(r=>r.poster).length} posters`
+            :`IMDB: no matches · search links ready`;
+        setStat('imdb', results.length?'ok':'warn', msg);
+
+    }catch(e){
+        console.warn('[DART] IMDb:',e.message);
+        // On any error still inject fallback links
+        _injectIMDbCards([
+            {_s:'imdb',title:`IMDb Name Search: "${q}"`,url:`https://www.imdb.com/find/?q=${encodeURIComponent(q)}&s=nm`,desc:`Search IMDb for people named "${q}"`},
+            {_s:'imdb',title:`IMDb Full Search: "${q}"`,url:`https://www.imdb.com/find/?q=${encodeURIComponent(q)}&s=all`,desc:`Search all of IMDb for "${q}"`}
+        ],q);
+        setStat('imdb','warn','IMDB: '+e.message.slice(0,30));
+    }
+}
+
+// Inject IMDb result objects as amber cards into the web results grid
+function _injectIMDbCards(results,q){
+    if(!results.length) return;
+    const divider=document.createElement('div');
+    divider.className='sdiv';
+    divider.textContent='★ IMDB — FILM · TV · TALENT';
+    rg.appendChild(divider);
+    let delay=0;
+    results.forEach(item=>{
+        delay+=50;
+        rg.appendChild(mkCard(item,delay,_lastQuery));
+    });
+    const existing=parseInt(rc.textContent||'0');
+    rc.textContent=String(existing+results.length);
+}
+
+// Render the IMDb poster visual panel (★ IMDB media tab)
+function _renderIMDbPosters(results){
+    const hasPoster=results.filter(r=>r.poster);
+    if(!hasPoster.length) return;
+
+    const posterGrid=document.getElementById('posterGrid');
+    const imdbTab=document.getElementById('tab-imdb');
+    const imdbCount=document.getElementById('imdb-count');
+
+    document.getElementById('mediaOuter').style.display='block';
+    if(imdbTab){ imdbTab.style.display=''; imdbCount.textContent=hasPoster.length; }
+
+    hasPoster.forEach((item,i)=>{
+        // Each card is an <a> that opens the IMDb page directly on click
+        const card=document.createElement('a');
+        card.className='poster-card shim';
+        card.href=item.url;
+        card.target='_blank';
+        card.rel='noopener';
+        card.style.animationDelay=(i*70)+'ms';
+        card.title=`${item.title}${item.type?` · ${item.type}`:''}`;
+
+        const typeShort=(item.type||'').toLowerCase()==='movie'?'FILM':
+                        (item.type||'').toLowerCase()==='series'?'SERIES':
+                        (item.type||'').toLowerCase()==='episode'?'EP':
+                        (item.type||'').toUpperCase()||'IMDB';
+
+        card.innerHTML=`
+            <div class="poster-img-wrap">
+                <img data-src="${esc(item.poster)}" alt="${esc(item.title)}" loading="lazy">
+                ${item.rating?`<div class="poster-rating">★ ${esc(item.rating)}</div>`:''}
+                <div class="poster-type">${esc(typeShort)}</div>
+            </div>
+            <div class="poster-info">
+                <div class="poster-title">${esc(item.title)}</div>
+                <div class="poster-meta">
+                    ${item.year?`<span class="poster-year">${esc(item.year)}</span>`:''}
+                    ${item.genre?`<br>${esc(item.genre.split(',')[0]||item.genre)}`:''}
+                    ${item.director?`<br>${esc(item.director.split(',')[0]||item.director)}`:''}
+                </div>
+            </div>`;
+
+        // NLE tracking
+        card.addEventListener('click',()=>{
+            NLE.onClick(_lastQuery,{_s:'imdb',title:item.title,url:item.url,desc:item.desc||''});
+        });
+
+        // Lazy-load poster image via IntersectionObserver
+        const imgEl=card.querySelector('img');
+        const obs=new IntersectionObserver(entries=>{
+            if(entries[0].isIntersecting){
+                imgEl.src=imgEl.dataset.src;
+                imgEl.onload=()=>{ imgEl.classList.add('ok'); card.classList.remove('shim'); };
+                imgEl.onerror=()=>{
+                    // Replace broken poster with placeholder
+                    card.querySelector('.poster-img-wrap').innerHTML=`<div class="poster-no-img">★</div>`;
+                    card.classList.remove('shim');
+                };
+                obs.disconnect();
+            }
+        },{rootMargin:'100px'});
+        obs.observe(card);
+        posterGrid.appendChild(card);
+    });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  LINKEDIN SEARCH + SOCIAL PANEL CARDS
+//
+//  LinkedIn does not expose a public CORS-open search API. DART uses:
+//  1. DDG site:linkedin.com filter to surface any indexed LinkedIn URLs
+//  2. Constructed deep-link search URLs that always resolve on LinkedIn
+//  3. Unavatar.io for CORS-open profile avatars (resolves LI profile images
+//     from the public profile slug without authentication)
+//  4. LinkedIn results inject signals into the unified signal engine so
+//     confirmed person/company names cross-boost all other result sources.
+//
+//  Results render as: (a) blue LINKEDIN text cards in the web results grid,
+//  AND (b) visual profile avatar cards in the ◎ SOCIAL media panel tab.
+// ═══════════════════════════════════════════════════════════
+
+async function searchLinkedIn(q){
+    try{
+        // Strategy A: DDG site:linkedin.com filter
+        const siteQuery=`${q} site:linkedin.com`;
+        const enc=encodeURIComponent(siteQuery);
+        const ddgUrl=`https://api.duckduckgo.com/?q=${enc}&format=json&no_html=1&skip_disambig=1`;
+        const r=await ft(ddgUrl,9000);
+        if(!r.ok) throw new Error('LinkedIn DDG HTTP '+r.status);
+        const d=await r.json();
+        const out=[];
+
+        // Collect any LI abstract
+        if(d.AbstractURL&&d.AbstractURL.includes('linkedin.com')&&d.Heading){
+            out.push({_s:'li',title:d.Heading,url:d.AbstractURL,desc:d.AbstractText||'LinkedIn profile',handle:d.Heading,platform:'linkedin'});
+        }
+        // Collect LI-linked related topics/results
+        [...(d.Results||[]),(d.RelatedTopics||[])].flat().forEach(t=>{
+            const tu=t.FirstURL||'';const tt=t.Text||'';
+            if(tu.includes('linkedin.com')&&tt){
+                out.push({_s:'li',title:tt.split(' - ')[0]||tt,url:tu,desc:tt,handle:tt.split(' - ')[0]||tt,platform:'linkedin'});
+            }
+            (t.Topics||[]).forEach(s=>{
+                const su=s.FirstURL||'';const st=s.Text||'';
+                if(su.includes('linkedin.com')&&st){
+                    out.push({_s:'li',title:st.split(' - ')[0]||st,url:su,desc:st,handle:st.split(' - ')[0]||st,platform:'linkedin'});
+                }
+            });
+        });
+
+        // Strategy B: Guaranteed-working LinkedIn deep-link search URLs.
+        // IMPORTANT: We do NOT guess /in/username/ slugs because LinkedIn profile
+        // URLs require the exact username the person chose — a generated slug from
+        // their name will almost always lead to "This page doesn't exist".
+        // Instead, we use LinkedIn's own search UI which always works and surfaces
+        // the right profiles for the query.
+        const fallbacks=[
+            {_s:'li',
+             title:`LinkedIn People: "${q}"`,
+             url:`https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(q)}`,
+             desc:`Search LinkedIn for people named "${q}" — browse their profiles, career history, connections, and endorsements`,
+             handle:q,platform:'linkedin'},
+            {_s:'li',
+             title:`LinkedIn Posts: "${q}"`,
+             url:`https://www.linkedin.com/search/results/content/?keywords=${encodeURIComponent(q)}`,
+             desc:`Browse LinkedIn posts and articles mentioning "${q}" — published content, shared updates, comments`,
+             handle:q,platform:'linkedin'},
+            {_s:'li',
+             title:`LinkedIn Companies: "${q}"`,
+             url:`https://www.linkedin.com/search/results/companies/?keywords=${encodeURIComponent(q)}`,
+             desc:`Search LinkedIn for companies matching "${q}" — pages, headcount, industry, employees`,
+             handle:q,platform:'linkedin'},
+            {_s:'li',
+             title:`LinkedIn Jobs: "${q}"`,
+             url:`https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(q)}`,
+             desc:`Browse LinkedIn job listings for "${q}" — full-time, part-time, remote, and contract positions`,
+             handle:q,platform:'linkedin'}
+        ];
+        const seen=new Set(out.map(i=>i.url));
+        fallbacks.forEach(i=>{ if(!seen.has(i.url)){ seen.add(i.url); out.push(i); } });
+        const combined=out.slice(0,8);
+
+        // Inject LinkedIn text cards into web results grid
+        if(combined.length){
+            const divider=document.createElement('div');
+            divider.className='sdiv';
+            divider.textContent='in LINKEDIN — PEOPLE · POSTS · COMPANIES · JOBS';
+            rg.appendChild(divider);
+            let delay=0;
+            combined.forEach(item=>{ delay+=50; rg.appendChild(mkCard(item,delay,_lastQuery)); });
+            const existing=parseInt(rc.textContent||'0');
+            rc.textContent=String(existing+combined.length);
+        }
+
+        // Render LinkedIn profile avatar cards in the social media panel.
+        // For LinkedIn we use the person's name as the handle (display name, not slug).
+        // ui-avatars will generate initials from the name automatically.
+        _renderSocialCards([
+            {platform:'linkedin',handle:q,
+             desc:'LinkedIn People search · click to view matching profiles',
+             url:`https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(q)}`},
+            {platform:'linkedin',handle:q+' posts',
+             desc:'LinkedIn content search · posts, articles, and updates',
+             url:`https://www.linkedin.com/search/results/content/?keywords=${encodeURIComponent(q)}`}
+        ]);
+
+        // Inject LinkedIn signals into unified signal engine
+        injectSocialSignals(combined.map(i=>({handle:q,desc:i.desc,title:i.title})));
+
+        setBadge('b-li','cyan');
+        setStat('li','ok','LINKEDIN: '+combined.length+' results');
+    }catch(e){
+        console.warn('[DART] LinkedIn:',e.message);
+        setStat('li','warn','LINKEDIN: '+e.message.slice(0,30));
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  INSTAGRAM SEARCH + SOCIAL PANEL CARDS
+//
+//  Instagram provides no public CORS-accessible API. DART uses:
+//  1. DDG site:instagram.com filter for any indexed Instagram URLs
+//  2. Constructed profile/hashtag/search deep-links that always render
+//  3. Unavatar.io for profile avatars (resolves Instagram profile pictures
+//     by username — CORS-open CDN, no Instagram auth required)
+//  4. Instagram handle/keyword signals injected into unified signal engine
+//
+//  Results render as pink INSTAGRAM text cards in the web results grid
+//  AND visual profile avatar cards in the ◎ SOCIAL media panel tab.
+// ═══════════════════════════════════════════════════════════
+
+async function searchInstagram(q){
+    try{
+        // Strategy A: DDG site:instagram.com filter
+        const siteQuery=`${q} site:instagram.com`;
+        const enc=encodeURIComponent(siteQuery);
+        const ddgUrl=`https://api.duckduckgo.com/?q=${enc}&format=json&no_html=1&skip_disambig=1`;
+        const r=await ft(ddgUrl,9000);
+        if(!r.ok) throw new Error('Instagram DDG HTTP '+r.status);
+        const d=await r.json();
+        const out=[];
+
+        if(d.AbstractURL&&d.AbstractURL.includes('instagram.com')&&d.Heading){
+            // DDG found an Instagram abstract — extract the handle from the URL if possible
+            const handleMatch=d.AbstractURL.match(/instagram\.com\/([^/?#]+)/);
+            const foundHandle=handleMatch?handleMatch[1]:d.Heading;
+            out.push({_s:'ig',title:`@${foundHandle} on Instagram`,url:d.AbstractURL,desc:d.AbstractText||'Instagram profile',platform:'instagram',handle:foundHandle});
+        }
+        [...(d.Results||[]),(d.RelatedTopics||[])].flat().forEach(t=>{
+            const tu=t.FirstURL||'';const tt=t.Text||'';
+            if(tu.includes('instagram.com')&&tt){
+                const handleMatch2=tu.match(/instagram\.com\/([^/?#]+)/);
+                const foundHandle2=handleMatch2?handleMatch2[1]:(tt.split(' - ')[0]||tt);
+                out.push({_s:'ig',title:`@${foundHandle2} on Instagram`,url:tu,desc:tt,platform:'instagram',handle:foundHandle2});
+            }
+            (t.Topics||[]).forEach(s=>{
+                const su=s.FirstURL||'';const st=s.Text||'';
+                if(su.includes('instagram.com')&&st){
+                    const hm=su.match(/instagram\.com\/([^/?#]+)/);
+                    const fh=hm?hm[1]:(st.split(' - ')[0]||st);
+                    out.push({_s:'ig',title:`@${fh} on Instagram`,url:su,desc:st,platform:'instagram',handle:fh});
+                }
+            });
+        });
+
+        // Strategy B: Handle variants derived from the query name.
+        // Instagram usernames cannot contain spaces; common patterns:
+        // justin.craig.venable, justincraigvenable, justin_craig_venable, justincvenable
+        const words=q.toLowerCase().split(/\s+/).filter(Boolean);
+        const handleNospace=words.join('').replace(/[^a-z0-9._]/g,'');
+        const handleDots=words.join('.').replace(/[^a-z0-9.]/g,'');
+        const handleUnder=words.join('_').replace(/[^a-z0-9_]/g,'');
+        // Short variant: first name + last name initial, or first initial + last name
+        const handleShort=words.length>=2?(words[0]+words[words.length-1]):'';
+        const handleInitialLast=words.length>=2?(words[0][0]+words[words.length-1]):'';
+
+        // Strategy C: Web search links to find the actual profile
+        // These send the user to a real search for the person's Instagram — very effective
+        const webSearchLinks=[
+            {_s:'ig',
+             title:`Find @${handleNospace} on Instagram`,
+             url:`https://www.google.com/search?q=${encodeURIComponent(q+' instagram')}`,
+             desc:`Google search for "${q} instagram" — finds their actual Instagram profile and posts`,
+             platform:'instagram',handle:handleNospace},
+            {_s:'ig',
+             title:`Instagram Keyword Search: "${q}"`,
+             url:`https://www.instagram.com/explore/search/keyword/?q=${encodeURIComponent(q)}`,
+             desc:`Search Instagram directly for "${q}" — finds public posts, reels, and stories`,
+             platform:'instagram',handle:handleNospace},
+            {_s:'ig',
+             title:`Instagram Hashtag: #${handleNospace}`,
+             url:`https://www.instagram.com/explore/tags/${handleNospace}/`,
+             desc:`Browse Instagram posts using #${handleNospace}`,
+             platform:'instagram',handle:handleNospace}
+        ];
+
+        // Profile guesses — clearly labeled as guesses
+        const profileGuesses=[
+            {_s:'ig',title:`@${handleNospace} (Instagram profile guess)`,url:`https://www.instagram.com/${handleNospace}/`,desc:`Try the Instagram profile at @${handleNospace} — click to check if this account exists`,platform:'instagram',handle:handleNospace},
+            {_s:'ig',title:`@${handleDots} (Instagram profile guess)`,url:`https://www.instagram.com/${handleDots}/`,desc:`Try @${handleDots} — common username style using dots between names`,platform:'instagram',handle:handleDots},
+            {_s:'ig',title:`@${handleUnder} (Instagram profile guess)`,url:`https://www.instagram.com/${handleUnder}/`,desc:`Try @${handleUnder} — common username style using underscores`,platform:'instagram',handle:handleUnder},
+        ];
+        if(handleShort&&handleShort!==handleNospace){
+            profileGuesses.push({_s:'ig',title:`@${handleShort} (Instagram profile guess)`,url:`https://www.instagram.com/${handleShort}/`,desc:`Try @${handleShort} — shortened username combining first and last name`,platform:'instagram',handle:handleShort});
+        }
+
+        const seen=new Set(out.map(i=>i.url));
+        [...webSearchLinks,...profileGuesses].forEach(i=>{ if(!seen.has(i.url)){ seen.add(i.url); out.push(i); } });
+        const combined=out.slice(0,9);
+
+        // Inject Instagram text cards into web results grid
+        if(combined.length){
+            const divider=document.createElement('div');
+            divider.className='sdiv';
+            divider.textContent='◎ INSTAGRAM — PROFILES · POSTS · HASHTAGS';
+            rg.appendChild(divider);
+            let delay=0;
+            combined.forEach(item=>{ delay+=50; rg.appendChild(mkCard(item,delay,_lastQuery)); });
+            const existing=parseInt(rc.textContent||'0');
+            rc.textContent=String(existing+combined.length);
+        }
+
+        // Render Instagram profile avatar cards in the social media panel
+        // Show the most likely handle variants as visual cards
+        const socialItems=[
+            {platform:'instagram',handle:handleNospace,desc:`Instagram · @${handleNospace}`,url:`https://www.instagram.com/${handleNospace}/`},
+            {platform:'instagram',handle:handleDots,desc:`Instagram · @${handleDots}`,url:`https://www.instagram.com/${handleDots}/`},
+            {platform:'instagram',handle:handleUnder,desc:`Instagram · @${handleUnder}`,url:`https://www.instagram.com/${handleUnder}/`}
+        ];
+        // If DDG found a real handle, put it first
+        const ddgHandles=out.filter(i=>i.handle&&!i.url.includes('google.com')&&!i.url.includes('explore')).slice(0,2);
+        ddgHandles.forEach(i=>socialItems.unshift({platform:'instagram',handle:i.handle,desc:`Instagram · @${i.handle} (found via web)`,url:i.url}));
+        _renderSocialCards(socialItems.slice(0,5));
+
+        injectSocialSignals(combined.map(i=>({handle:i.handle||handleNospace,desc:i.desc,title:i.title})));
+
+        setBadge('b-ig','cyan');
+        setStat('ig','ok','INSTAGRAM: '+combined.length+' results');
+    }catch(e){
+        console.warn('[DART] Instagram:',e.message);
+        setStat('ig','warn','INSTAGRAM: '+e.message.slice(0,30));
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  TWITTER/X SEARCH + SOCIAL PANEL CARDS
+//
+//  Twitter/X has no public CORS-accessible API. DART uses:
+//  1. DDG site:twitter.com OR site:x.com filter for indexed tweets/profiles
+//  2. Constructed X.com deep-link searches and profile URL variants
+//  3. Unavatar.io for Twitter profile picture fetching by @handle
+//     (Unavatar proxies Twitter/X profile images CORS-open without auth)
+//  4. Twitter/X handle and keyword signals injected into unified signal engine
+//
+//  Results render as silver TWITTER/X text cards in the web results grid
+//  AND visual profile avatar cards in the ◎ SOCIAL media panel tab.
+// ═══════════════════════════════════════════════════════════
+
+async function searchTwitterX(q){
+    try{
+        // Strategy A: DDG site filter for indexed Twitter/X content
+        const siteQuery=`${q} site:twitter.com OR site:x.com`;
+        const enc=encodeURIComponent(siteQuery);
+        const ddgUrl=`https://api.duckduckgo.com/?q=${enc}&format=json&no_html=1&skip_disambig=1`;
+        const r=await ft(ddgUrl,9000);
+        if(!r.ok) throw new Error('Twitter DDG HTTP '+r.status);
+        const d=await r.json();
+        const out=[];
+
+        // Helper to extract @handle from an x.com or twitter.com URL
+        const extractHandle=url=>{
+            const m=url.match(/(?:twitter\.com|x\.com)\/([^/?#]+)/);
+            if(!m||['search','i','hashtag','explore'].includes(m[1])) return null;
+            return m[1];
+        };
+
+        if(d.AbstractURL&&(d.AbstractURL.includes('twitter.com')||d.AbstractURL.includes('x.com'))&&d.Heading){
+            const h=extractHandle(d.AbstractURL)||d.Heading;
+            out.push({_s:'twx',title:`@${h} on Twitter/X`,url:d.AbstractURL,desc:d.AbstractText||'Twitter/X profile',platform:'twitter',handle:h});
+        }
+        [...(d.Results||[]),(d.RelatedTopics||[])].flat().forEach(t=>{
+            const tu=t.FirstURL||'';const tt=t.Text||'';
+            if((tu.includes('twitter.com')||tu.includes('x.com'))&&tt){
+                const h=extractHandle(tu)||tt.split(' - ')[0]||tt;
+                out.push({_s:'twx',title:`@${h} on Twitter/X`,url:tu,desc:tt,platform:'twitter',handle:h});
+            }
+            (t.Topics||[]).forEach(s=>{
+                const su=s.FirstURL||'';const st=s.Text||'';
+                if((su.includes('twitter.com')||su.includes('x.com'))&&st){
+                    const h2=extractHandle(su)||st.split(' - ')[0]||st;
+                    out.push({_s:'twx',title:`@${h2} on Twitter/X`,url:su,desc:st,platform:'twitter',handle:h2});
+                }
+            });
+        });
+
+        // Strategy B: Handle variants derived from the query name
+        const words=q.toLowerCase().split(/\s+/).filter(Boolean);
+        const handleNospace=words.join('').replace(/[^a-z0-9_]/g,'');
+        const handleUnder=words.join('_').replace(/[^a-z0-9_]/g,'');
+        const handleShort=words.length>=2?(words[0]+words[words.length-1]):'';
+
+        // Strategy C: Web search + X.com search deep-links (always work)
+        const searchLinks=[
+            {_s:'twx',title:`Find "${q}" on Twitter/X (Google)`,
+             url:`https://www.google.com/search?q=${encodeURIComponent(q+' twitter OR site:x.com')}`,
+             desc:`Google search for "${q} twitter" — finds their actual profile, posts, and mentions`,
+             platform:'twitter',handle:handleNospace},
+            {_s:'twx',title:`X Search: "${q}" — Latest`,
+             url:`https://x.com/search?q=${encodeURIComponent(q)}&f=live&src=typed_query`,
+             desc:`Live Twitter/X feed for "${q}" — real-time posts sorted by recency`,
+             platform:'twitter',handle:handleNospace},
+            {_s:'twx',title:`X People Search: "${q}"`,
+             url:`https://x.com/search?q=${encodeURIComponent(q)}&f=user&src=typed_query`,
+             desc:`Find Twitter/X user accounts matching "${q}" — profiles, follower counts, bios`,
+             platform:'twitter',handle:handleNospace},
+            {_s:'twx',title:`X Search: "${q}" — Top Posts`,
+             url:`https://x.com/search?q=${encodeURIComponent(q)}&src=typed_query`,
+             desc:`Top-ranked Twitter/X posts about "${q}" — sorted by engagement and relevance`,
+             platform:'twitter',handle:handleNospace},
+            {_s:'twx',title:`X Media: "${q}"`,
+             url:`https://x.com/search?q=${encodeURIComponent(q)}&f=image&src=typed_query`,
+             desc:`Photos and media posted about "${q}" on Twitter/X`,
+             platform:'twitter',handle:handleNospace}
+        ];
+
+        // Profile guesses
+        const profileGuesses=[
+            {_s:'twx',title:`@${handleNospace} (Twitter/X guess)`,url:`https://x.com/${handleNospace}`,desc:`Try @${handleNospace} on Twitter/X — click to verify this account exists`,platform:'twitter',handle:handleNospace},
+            {_s:'twx',title:`@${handleUnder} (Twitter/X guess)`,url:`https://x.com/${handleUnder}`,desc:`Try @${handleUnder} on Twitter/X`,platform:'twitter',handle:handleUnder}
+        ];
+        if(handleShort&&handleShort!==handleNospace){
+            profileGuesses.push({_s:'twx',title:`@${handleShort} (Twitter/X guess)`,url:`https://x.com/${handleShort}`,desc:`Try @${handleShort} — shortened handle`,platform:'twitter',handle:handleShort});
+        }
+
+        const seen=new Set(out.map(i=>i.url));
+        [...searchLinks,...profileGuesses].forEach(i=>{ if(!seen.has(i.url)){ seen.add(i.url); out.push(i); } });
+        const combined=out.slice(0,9);
+
+        // Inject Twitter/X text cards into web results grid
+        if(combined.length){
+            const divider=document.createElement('div');
+            divider.className='sdiv';
+            divider.textContent='✕ TWITTER/X — POSTS · PROFILES · TRENDS';
+            rg.appendChild(divider);
+            let delay=0;
+            combined.forEach(item=>{ delay+=50; rg.appendChild(mkCard(item,delay,_lastQuery)); });
+            const existing=parseInt(rc.textContent||'0');
+            rc.textContent=String(existing+combined.length);
+        }
+
+        // Render social cards — real handles from DDG first, then guesses
+        const ddgHandles=out.filter(i=>i.handle&&!i.url.includes('google.com')&&!i.url.includes('search?')).slice(0,2);
+        const socialItems=[
+            ...ddgHandles.map(i=>({platform:'twitter',handle:i.handle,desc:`Twitter/X · @${i.handle} (found via web)`,url:i.url})),
+            {platform:'twitter',handle:handleNospace,desc:`Twitter/X · @${handleNospace}`,url:`https://x.com/${handleNospace}`},
+            {platform:'twitter',handle:handleUnder,desc:`Twitter/X · @${handleUnder}`,url:`https://x.com/${handleUnder}`}
+        ];
+        _renderSocialCards(socialItems.slice(0,4));
+
+        injectSocialSignals(combined.map(i=>({handle:i.handle||handleNospace,desc:i.desc,title:i.title})));
+
+        setBadge('b-twx','cyan');
+        setStat('twx','ok','TWITTER/X: '+combined.length+' results');
+    }catch(e){
+        console.warn('[DART] Twitter/X:',e.message);
+        setStat('twx','warn','TWITTER/X: '+e.message.slice(0,30));
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SOCIAL PROFILE CARD RENDERER
+//
+//  Renders visual profile cards into the ◎ SOCIAL media panel tab.
+//  Avatar images are fetched via Unavatar.io — a free, open CORS CDN that
+//  resolves profile avatars for Instagram, Twitter, GitHub, and more by
+//  simple URL: https://unavatar.io/{platform}/{handle}
+//
+//  If the avatar fails to load (profile is private or doesn't exist), a
+//  fallback icon is shown. Cards link directly to the platform profile.
+//  All cards use lazy-loading via IntersectionObserver.
+//
+//  Each new batch of social cards is deduped against already-rendered
+//  ones by comparing the card's href URL to prevent duplicates when
+//  Instagram, LinkedIn, and Twitter all render cards to the same panel.
+// ═══════════════════════════════════════════════════════════
+
+let _renderedSocialUrls = new Set(); // Track rendered social card URLs for dedup
+
+function _renderSocialCards(items){
+    if(!items||!items.length) return;
+
+    const socialGrid=document.getElementById('socialGrid');
+    const socialTab=document.getElementById('tab-social');
+    const socialCount=document.getElementById('social-count');
+
+    document.getElementById('mediaOuter').style.display='block';
+    if(socialTab){ socialTab.style.display=''; }
+
+    const platformClasses={instagram:'sc-ig',twitter:'sc-twx',linkedin:'sc-li'};
+    const platformLabels={instagram:'INSTAGRAM',twitter:'TWITTER/X',linkedin:'LINKEDIN'};
+    const platformIcons={instagram:'◎',twitter:'✕',linkedin:'in'};
+
+    let addedCount=0;
+    items.forEach((item,idx)=>{
+        // Guard: skip if no handle or URL already rendered
+        if(!item.handle) return;
+        const deduKey=(item.url||item.handle).toLowerCase();
+        if(_renderedSocialUrls.has(deduKey)) return;
+        _renderedSocialUrls.add(deduKey);
+        addedCount++;
+
+        const cls=platformClasses[item.platform]||'sc-ig';
+        const label=platformLabels[item.platform]||'SOCIAL';
+        const icon=platformIcons[item.platform]||'◎';
+
+        // Build card entirely with DOM API — avoids any innerHTML escaping crash
+        const card=document.createElement('a');
+        card.className='social-card '+cls;
+        card.href=item.url||'#';
+        card.target='_blank';
+        card.rel='noopener';
+        card.style.animationDelay=(idx*80)+'ms';
+        card.title=label+': '+item.handle;
+
+        // ── Avatar element ────────────────────────────────
+        // Use ui-avatars.com as the primary avatar source: generates a clean
+        // initials-based avatar with platform color — always works, no CORS issues,
+        // no auth needed, no rate limits. If we also have an Unavatar URL we try
+        // loading it and fall back to the initials avatar silently.
+        const platformColors={instagram:'e1306c',twitter:'1da1f2',linkedin:'0a66c2'};
+        const bgColor=platformColors[item.platform]||'4a6070';
+        const initials=item.handle.replace(/[^a-zA-Z0-9\s]/g,' ').trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase()||icon;
+        const initialsAvatarUrl=`https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=${bgColor}&color=fff&size=92&bold=true&format=png`;
+
+        const avatarImg=document.createElement('img');
+        avatarImg.className='sc-avatar '+cls;
+        avatarImg.alt=item.handle;
+        avatarImg.width=46;
+        avatarImg.height=46;
+
+        // Try Unavatar first (real profile photo), fall back to initials avatar
+        let primaryUrl=initialsAvatarUrl; // default = always-works initials
+        if(item.platform==='instagram'){
+            primaryUrl=`https://unavatar.io/instagram/${encodeURIComponent(item.handle)}?fallback=${encodeURIComponent(initialsAvatarUrl)}`;
+        } else if(item.platform==='twitter'){
+            primaryUrl=`https://unavatar.io/twitter/${encodeURIComponent(item.handle)}?fallback=${encodeURIComponent(initialsAvatarUrl)}`;
+        }
+        // Load primary; if it fails (CORS block, private profile), switch to initials
+        avatarImg.onerror=function(){ this.onerror=null; this.src=initialsAvatarUrl; };
+
+        // Body section
+        const body=document.createElement('div');
+        body.className='sc-body';
+
+        const handleEl=document.createElement('div');
+        handleEl.className='sc-handle '+cls;
+        handleEl.textContent=icon+' '+item.handle;
+
+        const descEl=document.createElement('div');
+        descEl.className='sc-desc';
+        descEl.textContent=item.desc||'';
+
+        const platEl=document.createElement('span');
+        platEl.className='sc-platform '+cls;
+        platEl.textContent=label;
+
+        body.appendChild(handleEl);
+        body.appendChild(descEl);
+        body.appendChild(platEl);
+        card.appendChild(avatarImg);
+        card.appendChild(body);
+
+        // Lazy-load avatar via IntersectionObserver
+        const obs=new IntersectionObserver(entries=>{
+            if(entries[0].isIntersecting){
+                avatarImg.src=primaryUrl;
+                obs.disconnect();
+            }
+        },{rootMargin:'150px'});
+        obs.observe(card);
+
+        // NLE click tracking
+        card.addEventListener('click',()=>{
+            NLE.onClick(_lastQuery,{
+                _s:item.platform==='twitter'?'twx':item.platform==='linkedin'?'li':'ig',
+                title:item.handle,url:item.url,desc:item.desc||''
+            });
+        });
+
+        socialGrid.appendChild(card);
+    });
+
+    if(socialCount){
+        const cur=parseInt(socialCount.textContent||'0');
+        socialCount.textContent=String(cur+addedCount);
+    }
+}
+
+function hit(item,ql){return(item.title||'').toLowerCase().includes(ql)||(item.desc||'').toLowerCase().includes(ql)||(item.tags||[]).some(t=>t.toLowerCase().includes(ql));}
+
+// ft: fetch with timeout. Uses AbortController so no console network error on timeout.
+function ft(url,ms){
+    const ctrl=new AbortController();
+    const tid=setTimeout(()=>ctrl.abort(),ms||8000);
+    return fetch(url,{signal:ctrl.signal}).finally(()=>clearTimeout(tid));
+}
+function striptags(s){return s.replace(/<[^>]+>/g,'').replace(/&quot;/g,'"').replace(/&amp;/g,'&').replace(/&#(\d+);/g,(_,n)=>String.fromCharCode(n));}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function getDom(u){try{return new URL(u).hostname;}catch{return u;}}
+</script>
+</body>
+</html>
