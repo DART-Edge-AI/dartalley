@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+  <title>DART Alley | Neural Search Engine</title>
+  <link>https://dartalley.club</link>
+  <description>The latest news and updates from DART Meadow | Radical Deepscale</description>
+  <language>en-us</language>
+  <atom:link href="https://dartalley.club/feed.xml" rel="self" type="application/rss+xml" />
+
+  <item>
+    <title>New Feature: Image, Social and YouTube Search</title>
+    <link></link>
+    <description>Alley Club For specialized Meadow Adventures</description>
+    <pubDate>Sat, 26 Feb 2026 14:00:00 GMT</pubDate>
+    <guid isPermaLink="true">https://dartalley.club</guid>
+  </item>
+
+ 
+  </channel>
+</rss>
