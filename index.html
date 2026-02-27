@@ -570,9 +570,26 @@
         .yt-refine-tag.from-social:hover{border-color:#f77ab7;color:#f77ab7;}
 
         @media(max-width:520px){.hud-r,.pfx{display:none}.logo-main{font-size:2.4rem}}
+           /* full‐screen video behind everything */
+    #bgvid {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      z-index: -10;
+      pointer-events: none;
+    }
+
     </style>
 </head>
 <body>
+    
+        <!-- full‐screen video background -->
+ <video id="bgvid" autoplay muted loop playsinline>
+  <source src="https://raw.githubusercontent.com/DART-Edge-AI/dartalley/main/dartalley.mp4" type="video/mp4">
+</video>
+
+    
 <canvas id="sc"></canvas>
 <div class="cnr tl"></div><div class="cnr br"></div>
 
