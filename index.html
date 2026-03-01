@@ -79,7 +79,56 @@
         .bscan:active{transform:translateY(0);}
         .bscan:disabled{opacity:0.45;cursor:not-allowed;transform:none;}
 
-        /* SEARCH HISTORY DROPDOWN */
+        /* ── LISTEN / MUSIC RECOGNITION BUTTON ─────────────────────── */
+        .blisten{font-family:'Orbitron',monospace;font-size:0.58rem;font-weight:700;letter-spacing:1.5px;padding:10px 13px;background:transparent;color:var(--purple);border:1px solid rgba(192,132,252,0.4);border-radius:2px;cursor:pointer;transition:all 0.2s;text-transform:uppercase;white-space:nowrap;flex-shrink:0;display:flex;align-items:center;gap:6px;}
+        .blisten:hover{background:rgba(192,132,252,0.1);border-color:var(--purple);box-shadow:0 0 18px rgba(192,132,252,0.25);}
+        .blisten.listening{border-color:var(--purple);background:rgba(192,132,252,0.12);animation:lpulse 1s ease-in-out infinite;}
+        .blisten.working{opacity:0.6;cursor:not-allowed;border-color:rgba(192,132,252,0.4);}
+        @keyframes lpulse{0%,100%{box-shadow:0 0 8px rgba(192,132,252,0.2)}50%{box-shadow:0 0 28px rgba(192,132,252,0.65);}}
+        .bl-dot{width:7px;height:7px;border-radius:50%;background:var(--purple);box-shadow:0 0 6px var(--purple);flex-shrink:0;transition:background 0.2s;}
+        .blisten.listening .bl-dot{animation:lpulse 0.8s ease-in-out infinite;}
+
+        /* ── MUSIC RECOGNITION OVERLAY ─────────────────────────────── */
+        #musicOv{display:none;position:fixed;inset:0;z-index:10020;background:rgba(2,4,8,0.96);backdrop-filter:blur(22px);align-items:center;justify-content:center;}
+        #musicOv.open{display:flex;}
+        .mov-close{position:fixed;top:18px;right:22px;font-size:1.2rem;color:var(--dim);cursor:pointer;z-index:10021;font-family:monospace;transition:color 0.2s;line-height:1;}
+        .mov-close:hover{color:#fff;}
+        .mov-inner{width:min(500px,94vw);display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 0;}
+        .mov-eyebrow{font-family:'Orbitron',monospace;font-size:0.48rem;letter-spacing:4px;color:var(--purple);margin-bottom:14px;}
+        .mov-status{font-family:'Share Tech Mono',monospace;font-size:0.72rem;letter-spacing:1.5px;color:var(--dim);text-align:center;min-height:44px;display:flex;align-items:center;justify-content:center;padding:0 16px;}
+        /* animated waveform bars */
+        .mov-wave{display:flex;gap:3px;align-items:center;justify-content:center;height:44px;margin:6px 0;}
+        .mov-wave.hidden{visibility:hidden;}
+        .mov-b{width:4px;border-radius:3px;background:var(--purple);}
+        .mov-b:nth-child(1){animation:wb 0.7s 0.00s ease-in-out infinite;height:10px;}
+        .mov-b:nth-child(2){animation:wb 0.7s 0.09s ease-in-out infinite;height:18px;}
+        .mov-b:nth-child(3){animation:wb 0.7s 0.18s ease-in-out infinite;height:30px;}
+        .mov-b:nth-child(4){animation:wb 0.7s 0.27s ease-in-out infinite;height:22px;}
+        .mov-b:nth-child(5){animation:wb 0.7s 0.36s ease-in-out infinite;height:34px;}
+        .mov-b:nth-child(6){animation:wb 0.7s 0.22s ease-in-out infinite;height:26px;}
+        .mov-b:nth-child(7){animation:wb 0.7s 0.14s ease-in-out infinite;height:16px;}
+        .mov-b:nth-child(8){animation:wb 0.7s 0.05s ease-in-out infinite;height:10px;}
+        @keyframes wb{0%,100%{transform:scaleY(0.25)}50%{transform:scaleY(1.15)}}
+        .mov-timer{font-family:'Orbitron',monospace;font-size:1.8rem;letter-spacing:4px;color:var(--purple);min-height:40px;display:flex;align-items:center;justify-content:center;}
+        /* result card */
+        .mov-match{width:100%;border:1px solid rgba(192,132,252,0.28);border-left:3px solid var(--purple);background:rgba(192,132,252,0.05);border-radius:0 4px 4px 0;padding:20px 22px;animation:cs .35s ease forwards;opacity:0;margin-top:8px;}
+        .mov-title{font-family:'Exo 2',sans-serif;font-size:1.15rem;font-weight:700;color:#fff;line-height:1.3;margin-bottom:3px;}
+        .mov-artist{font-family:'Share Tech Mono',monospace;font-size:0.75rem;color:var(--purple);letter-spacing:2px;margin-bottom:2px;}
+        .mov-album{font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--dim);letter-spacing:1px;margin-bottom:14px;}
+        .mov-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+        .mov-lnk{font-family:'Orbitron',monospace;font-size:0.5rem;font-weight:700;letter-spacing:1.5px;padding:8px 13px;border-radius:2px;text-decoration:none;transition:all 0.2s;text-transform:uppercase;display:inline-flex;align-items:center;gap:5px;}
+        .mov-lnk.yt{color:#ff4444;border:1px solid rgba(255,68,68,0.38);background:rgba(255,68,68,0.05);}
+        .mov-lnk.yt:hover{background:rgba(255,68,68,0.18);border-color:#ff4444;}
+        .mov-lnk.sp{color:#1db954;border:1px solid rgba(29,185,84,0.38);background:rgba(29,185,84,0.05);}
+        .mov-lnk.sp:hover{background:rgba(29,185,84,0.18);border-color:#1db954;}
+        .mov-lnk.am{color:#fc3c44;border:1px solid rgba(252,60,68,0.38);background:rgba(252,60,68,0.05);}
+        .mov-lnk.am:hover{background:rgba(252,60,68,0.18);border-color:#fc3c44;}
+        .mov-lnk.da{color:var(--cyan);border:1px solid rgba(0,229,255,0.35);background:rgba(0,229,255,0.04);}
+        .mov-lnk.da:hover{background:rgba(0,229,255,0.12);border-color:var(--cyan);}
+        .mov-nomatch{text-align:center;padding:20px;color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:0.63rem;letter-spacing:1.5px;}
+        .mov-actions{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;justify-content:center;}
+        .mov-btn{font-family:'Orbitron',monospace;font-size:0.53rem;font-weight:700;letter-spacing:1.5px;padding:9px 18px;border-radius:2px;cursor:pointer;transition:all 0.2s;text-transform:uppercase;border:1px solid rgba(192,132,252,0.38);color:var(--purple);background:rgba(192,132,252,0.06);}
+        .mov-btn:hover{background:rgba(192,132,252,0.18);border-color:var(--purple);}
         .sh-drop{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#050d14;border:1px solid var(--border);border-top:none;border-radius:0 0 4px 4px;z-index:9000;display:none;flex-direction:column;max-height:320px;overflow-y:auto;box-shadow:0 14px 40px rgba(0,0,0,0.75);scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
         .sh-drop.open{display:flex;}
         .sh-drop::-webkit-scrollbar{width:4px;}
@@ -610,6 +659,34 @@
      The "Watch on YouTube" button below the player navigates to the
      actual YouTube video page in a new tab. Pressing Escape or clicking
      outside the player frame closes the overlay and stops playback. -->
+<!-- ══ MUSIC RECOGNITION OVERLAY ═══════════════════════════════════
+     Tap LISTEN → mic permission → 8-second recording → AudD API
+     fingerprints the audio and returns title + artist + platform links.
+     No YouTube API needed for recognition — YouTube Data API is a
+     search API, not audio analysis. AudD uses acoustic fingerprinting
+     (same tech as Shazam). Free tier: 500 recognitions/day, no key
+     required for trial. Free key: https://dashboard.audd.io
+     ═════════════════════════════════════════════════════════════════ -->
+<div id="musicOv">
+    <span class="mov-close" id="movClose">✕</span>
+    <div class="mov-inner">
+        <div class="mov-eyebrow">♪ AUDIO RECOGNITION — DART ALLEY</div>
+        <div class="mov-wave hidden" id="movWave">
+            <div class="mov-b"></div><div class="mov-b"></div><div class="mov-b"></div>
+            <div class="mov-b"></div><div class="mov-b"></div><div class="mov-b"></div>
+            <div class="mov-b"></div><div class="mov-b"></div>
+        </div>
+        <div class="mov-timer" id="movTimer"></div>
+        <div class="mov-status" id="movStatus">Hold your device near the audio source, then tap LISTEN.</div>
+        <div id="movResult"></div>
+        <div class="mov-actions">
+            <button class="mov-btn" id="movListenBtn" onclick="listenStart()">♪ LISTEN</button>
+            <button class="mov-btn" id="movStopBtn" style="display:none;" onclick="listenStop()">■ STOP</button>
+            <button class="mov-btn" onclick="closeMusicOverlay()" style="border-color:rgba(74,96,112,0.5);color:var(--dim);">CLOSE</button>
+        </div>
+    </div>
+</div>
+
 <div id="yt-overlay">
     <div class="yt-ov-close" id="yt-ov-close" title="Close preview (Esc)">✕</div>
 
@@ -671,6 +748,9 @@
             <div class="si">
                 <span class="pfx">&gt;_</span>
                 <input type="text" id="qi" placeholder="search anything across the Meadow..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                <button class="blisten" id="listenBtn" onclick="openMusicOverlay()" title="Identify music playing in your environment">
+                    <span class="bl-dot"></span>LISTEN
+                </button>
                 <button class="bscan" id="sbtn" onclick="doSearch()">SCAN</button>
             </div>
             <!-- SEARCH HISTORY DROPDOWN -->
@@ -1046,6 +1126,262 @@ document.addEventListener('mousedown', e => {
     }
 });
 
+
+// ═══════════════════════════════════════════════════════════════════
+//  DART LISTEN — Ambient Music Recognition
+//
+//  Flow:
+//   1. User taps LISTEN button → music overlay opens
+//   2. Browser asks for microphone permission (one-time)
+//   3. MediaRecorder captures ~8 s of ambient audio
+//   4. Audio blob is base64-encoded and POSTed to AudD API
+//      → AudD uses acoustic fingerprinting (same tech as Shazam)
+//      → Returns: title, artist, album, release date
+//               + direct Spotify / Apple Music / Deezer links
+//   5. DART builds YouTube Music search link automatically
+//   6. Song title+artist auto-fills the main search input
+//   7. User can tap "◈ NEURAL SCAN" to run full Dart Alley search
+//
+//  Why not the YouTube Data API for recognition?
+//   YouTube's Data API v3 is a metadata/search API — it has no
+//   audio fingerprinting capability. YouTube's internal Content ID
+//   system does fingerprinting but is not publicly accessible.
+//   AudD is the cleanest public solution; it's the same approach
+//   used by Shazam, SoundHound, and ACRCloud.
+//
+//  AudD free tier: 500 recognitions/day — no key needed for trial.
+//  For higher limits get a free key: https://dashboard.audd.io
+//  Paste it into AUDD_TOKEN below once you have one.
+// ═══════════════════════════════════════════════════════════════════
+
+const AUDD_TOKEN    = '';                    // ← your free AudD key (or blank for trial)
+const AUDD_URL      = 'https://api.audd.io/';
+const LISTEN_SECS   = 8;                     // seconds of audio to capture
+
+// Recording state
+let _mr       = null;   // MediaRecorder instance
+let _chunks   = [];     // recorded audio chunks
+let _stream   = null;   // MediaStream (mic)
+let _lTimer   = null;   // countdown interval
+let _lCount   = 0;      // countdown value
+let _movOpen  = false;  // overlay open flag
+
+// ── Overlay open / close ───────────────────────────────────────────
+function openMusicOverlay(){
+    document.getElementById('musicOv').classList.add('open');
+    _movOpen = true;
+    // Reset to initial state
+    _movWave(false);
+    _movTimer('');
+    _movStat('Hold your device near the audio source, then tap ♪ LISTEN.');
+    document.getElementById('movResult').innerHTML = '';
+    document.getElementById('movListenBtn').style.display = '';
+    document.getElementById('movStopBtn').style.display   = 'none';
+}
+
+function closeMusicOverlay(){
+    document.getElementById('musicOv').classList.remove('open');
+    _movOpen = false;
+    listenStop(true); // quiet cleanup
+    // Reset listen button in search bar
+    const b = document.getElementById('listenBtn');
+    if(b){ b.classList.remove('listening','working'); b.innerHTML='<span class="bl-dot"></span>LISTEN'; b.onclick=()=>openMusicOverlay(); }
+}
+
+// Close on backdrop click or Escape
+document.getElementById('musicOv').addEventListener('click', e => { if(e.target.id==='musicOv') closeMusicOverlay(); });
+document.getElementById('movClose').addEventListener('click', closeMusicOverlay);
+document.addEventListener('keydown', e => { if(e.key==='Escape' && _movOpen) closeMusicOverlay(); });
+
+// ── UI helpers ─────────────────────────────────────────────────────
+function _movStat(msg){ const el=document.getElementById('movStatus'); if(el) el.textContent=msg; }
+function _movTimer(t){ const el=document.getElementById('movTimer'); if(el) el.textContent=t; }
+function _movWave(show){ const el=document.getElementById('movWave'); if(el) el.classList.toggle('hidden',!show); }
+
+// ── Main listen entry point ────────────────────────────────────────
+async function listenStart(){
+    // Update search bar button
+    const sb = document.getElementById('listenBtn');
+    if(sb){ sb.classList.add('working'); }
+
+    _movStat('Requesting microphone access...');
+    document.getElementById('movListenBtn').style.display = 'none';
+    document.getElementById('movStopBtn').style.display   = '';
+    document.getElementById('movResult').innerHTML        = '';
+
+    let stream;
+    try{
+        stream = await navigator.mediaDevices.getUserMedia({ audio:true, video:false });
+    }catch(err){
+        const denied = err.name==='NotAllowedError'||err.name==='PermissionDeniedError';
+        _movStat(denied
+            ? '⚠ Microphone access denied. Allow mic access in your browser settings and try again.'
+            : '⚠ Could not access microphone: '+err.message);
+        document.getElementById('movListenBtn').style.display = '';
+        document.getElementById('movStopBtn').style.display   = 'none';
+        if(sb){ sb.classList.remove('working'); }
+        return;
+    }
+
+    _stream = stream;
+    _chunks = [];
+
+    // Pick best supported audio format
+    const mime = ['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/mp4']
+        .find(t => MediaRecorder.isTypeSupported(t)) || '';
+
+    try{ _mr = new MediaRecorder(stream, mime ? {mimeType:mime} : {}); }
+    catch(e){ _mr = new MediaRecorder(stream); }
+
+    _mr.ondataavailable = e => { if(e.data && e.data.size>0) _chunks.push(e.data); };
+    _mr.onstop = _processAudio;
+    _mr.start(300);
+
+    // Update both buttons
+    if(sb){ sb.classList.remove('working'); sb.classList.add('listening'); sb.innerHTML='<span class="bl-dot"></span>■ STOP'; sb.onclick=()=>listenStop(); }
+
+    _movWave(true);
+    _movStat('Listening… hold phone near the speaker.');
+    _lCount = LISTEN_SECS;
+    _movTimer(_lCount + 's');
+    _lTimer = setInterval(()=>{
+        _lCount--;
+        _movTimer(_lCount>0 ? _lCount+'s' : '');
+        if(_lCount<=0){
+            clearInterval(_lTimer);
+            if(_mr && _mr.state!=='inactive') _mr.stop();
+        }
+    }, 1000);
+}
+
+// ── Stop recording manually ────────────────────────────────────────
+function listenStop(silent){
+    clearInterval(_lTimer);
+    if(_mr && _mr.state!=='inactive') _mr.stop();
+    if(_stream){ _stream.getTracks().forEach(t=>t.stop()); _stream=null; }
+    const sb = document.getElementById('listenBtn');
+    if(sb){ sb.classList.remove('listening','working'); sb.innerHTML='<span class="bl-dot"></span>LISTEN'; sb.onclick=()=>openMusicOverlay(); }
+    if(!silent){
+        _movWave(false); _movTimer('');
+        document.getElementById('movStopBtn').style.display   = 'none';
+        document.getElementById('movListenBtn').style.display = '';
+        _movStat('Recording stopped. Tap ♪ LISTEN to try again.');
+    }
+}
+
+// ── Process recorded audio blob → AudD → render ───────────────────
+async function _processAudio(){
+    _movWave(false); _movTimer('');
+    document.getElementById('movStopBtn').style.display   = 'none';
+    document.getElementById('movListenBtn').style.display = '';
+    if(_stream){ _stream.getTracks().forEach(t=>t.stop()); _stream=null; }
+
+    if(!_chunks.length){ _movStat('⚠ No audio captured. Check that your microphone is working.'); return; }
+
+    _movStat('Analyzing audio fingerprint…');
+
+    // Encode to base64
+    const mimeUsed = _mr?.mimeType || 'audio/webm';
+    const blob = new Blob(_chunks, { type: mimeUsed });
+    let b64;
+    try{
+        const dataUrl = await new Promise((res,rej)=>{ const r=new FileReader(); r.onloadend=()=>res(r.result); r.onerror=()=>rej(r.error); r.readAsDataURL(blob); });
+        b64 = dataUrl.split(',')[1];
+    }catch(e){ _movStat('⚠ Failed to encode audio. Please try again.'); return; }
+
+    // POST to AudD
+    const fd = new FormData();
+    fd.append('audio', b64);
+    fd.append('return', 'spotify,apple_music,deezer,musicbrainz');
+    if(AUDD_TOKEN) fd.append('api_token', AUDD_TOKEN);
+
+    _movStat('Querying recognition database…');
+    let data;
+    try{
+        const r = await fetch(AUDD_URL, { method:'POST', body:fd });
+        if(!r.ok) throw new Error('HTTP '+r.status);
+        data = await r.json();
+    }catch(e){
+        _movStat('⚠ Network error. Check your connection and try again.'); return;
+    }
+
+    if(data.status === 'error'){
+        const msg = data.error?.error_message || data.error?.message || 'Unknown error';
+        if(/limit|quota|request/i.test(msg)){
+            _movStat('⚠ AudD daily limit reached. Get a free key at audd.io (500/day) and paste it into AUDD_TOKEN in the code.');
+        } else {
+            _movStat('⚠ Recognition error: '+msg);
+        }
+        return;
+    }
+
+    if(!data.result){ _movNoMatch(); return; }
+    _movRenderMatch(data.result);
+}
+
+// ── Render match card ──────────────────────────────────────────────
+function _movRenderMatch(r){
+    const title  = r.title  || 'Unknown Title';
+    const artist = r.artist || 'Unknown Artist';
+    const album  = r.album  || '';
+    const year   = r.release_date ? r.release_date.slice(0,4) : '';
+    const encQ   = encodeURIComponent(title+' '+artist);
+
+    // Build platform link buttons
+    const links = [];
+    // YouTube Music (always — no key needed, just a search URL)
+    links.push(`<a class="mov-lnk yt" href="https://music.youtube.com/search?q=${encQ}" target="_blank" rel="noopener">▶ YT MUSIC</a>`);
+    // Spotify
+    const spUrl = r.spotify?.external_urls?.spotify || `https://open.spotify.com/search/${encQ}`;
+    links.push(`<a class="mov-lnk sp" href="${esc(spUrl)}" target="_blank" rel="noopener">◉ SPOTIFY</a>`);
+    // Apple Music
+    if(r.apple_music?.url){
+        links.push(`<a class="mov-lnk am" href="${esc(r.apple_music.url)}" target="_blank" rel="noopener">♪ APPLE</a>`);
+    }
+    // Deezer
+    if(r.deezer?.link){
+        links.push(`<a class="mov-lnk am" href="${esc(r.deezer.link)}" target="_blank" rel="noopener">◈ DEEZER</a>`);
+    }
+    // Neural Scan — full DART ALLEY search for this song
+    links.push(`<a class="mov-lnk da" href="#" onclick="movNeuralScan(${JSON.stringify(title)},${JSON.stringify(artist)});return false;">◈ NEURAL SCAN</a>`);
+
+    _movStat('');
+    document.getElementById('movResult').innerHTML = `
+        <div class="mov-match">
+            <div class="mov-title">${esc(title)}</div>
+            <div class="mov-artist">${esc(artist)}</div>
+            ${album||year ? `<div class="mov-album">${esc(album)}${album&&year?' · ':''}${esc(year)}</div>` : ''}
+            <div class="mov-links">${links.join('')}</div>
+        </div>`;
+
+    // Auto-fill search input with identified song
+    const qi = document.getElementById('qi');
+    if(qi) qi.value = title + ' ' + artist;
+
+    // Auto-trigger YouTube search so video tab populates immediately
+    if(typeof searchYouTube === 'function') searchYouTube(title+' '+artist).catch(()=>{});
+}
+
+function _movNoMatch(){
+    _movStat('');
+    document.getElementById('movResult').innerHTML = `
+        <div class="mov-nomatch">
+            <div style="font-size:2rem;opacity:0.2;margin-bottom:10px;">♪</div>
+            NO MATCH FOUND
+            <div style="font-size:0.56rem;margin-top:8px;opacity:0.55;line-height:1.7;">
+                Try again · Make sure the music is clearly audible<br>
+                Reduce background noise · Try a longer sample
+            </div>
+        </div>`;
+}
+
+// ── Trigger full neural scan from match card ───────────────────────
+function movNeuralScan(title, artist){
+    const qi = document.getElementById('qi');
+    if(qi) qi.value = title + ' ' + artist;
+    closeMusicOverlay();
+    doSearch();
+}
 
 // ═══════════════════════════════════════════════════════════
 //  DART SAFE — Content Safety Filter
